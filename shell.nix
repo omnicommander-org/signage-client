@@ -7,6 +7,9 @@ pkgs.mkShell {
 		openssl
 		pkg-config
 		sqlx-cli
+		mpv
+		socat
+		mold
 	];
 }
 

@@ -4,9 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[build]
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 
 [dependencies]
 anyhow = "1.0.74"
+chrono = { version = "0.4.26", features = ["serde"] }
 daemonize = "0.5.0"
 reqwest = { version = "0.11.18", features = ["blocking", "json"] }
 serde = { version = "1.0.183", features = ["derive"] }

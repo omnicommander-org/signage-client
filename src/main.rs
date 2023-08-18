@@ -1,76 +1,121 @@
-use daemonize::Daemonize;
+use chrono::{DateTime, Utc};
+use config::Config;
+use data::Data;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
-use std::{thread, time, fs::File, rc::Rc};
-use anyhow::Result;
+use std::{boxed::Box, error::Error};
+use tokio::process::{Child, Command};
+use tokio::time::{self, Duration};
+use util::{Apikey, Updated, Video};
 
-#[derive(Serialize, Deserialize)]
-struct Apikey {
-    key: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Video {
-    title: String,
-    url: String,
-}
+mod config;
+mod data;
+mod util;
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    let url = "http://localhost:8080";
-    let id = "fd7b5f34-0b07-4ea1-8840-a577c8a5a4ed";
+async fn main() -> Result<(), Box<dyn Error>> {
+    let mut config = Config::new();
+    let mut data = Data::new();
+    let client = Client::new();
 
-    // Wrap the client in an Rc so we're not using unnecessary memory
-    let client = Rc::new(Client::new());
+    config.load().await?;
+    data.load().await?;
 
-    let stdout = File::create("/tmp/signage.out")?;
-    let stderr = File::create("/tmp/signage.err")?;
+    if data.last_update.is_none() {
+        let updated = sync(&client, &config).await?;
+        update_videos(&client, &config, &mut data, updated).await?;
+    }
 
-    // Start the daemon
-    Daemonize::new()
-        .pid_file("/tmp/signage.pid")
-        .chown_pid_file(true)
-        .working_directory("/tmp")
-        .stdout(stdout)
-        .stderr(stderr)
-        .start()?;
+    let mut mpv = start_mpv().await?;
 
-    let mut mpv: Option<std::process::Child> = None;
+    if config.key.is_none() {
+        config.key = Some(get_new_key(&client, &config).await?.key);
+    }
+    config.write().await?;
+
+    let mut interval = time::interval(Duration::from_secs(5));
 
     loop {
-        get_videos(client.clone(), url, id, authenticate(client.clone(), url, id).await?).await?;
+        interval.tick().await;
 
-        if mpv.is_some() {
-            mpv.unwrap().kill()?;
+        let updated = sync(&client, &config).await?;
+
+        if updated > data.last_update {
+            update_videos(&client, &config, &mut data, updated).await?;
+            mpv.kill().await?;
         }
 
-        mpv = Some(
-            std::process::Command::new("mpv")
-                .arg("--loop")
-                .arg("/home/noah/Downloads/icelandwaterfall.mp4")
-                .spawn()?,
-        );
-
-        thread::sleep(time::Duration::new(30, 0));
+        match mpv.try_wait() {
+            Ok(Some(_)) => mpv = start_mpv().await?,
+            Ok(None) => (),
+            Err(error) => eprintln!("{}", error),
+        }
     }
 }
 
-async fn authenticate(client: Rc<Client>, url: &str, id: &str) -> Result<Apikey> {
-    let apikey: Apikey = client.get(String::from(url) + "/get-new-key/" + id).send().await?.json().await?;
+async fn start_mpv() -> Result<Child, Box<dyn Error>> {
+    let child = Command::new("mpv")
+        // .arg("-fs")
+        .arg("--loop-playlist=inf")
+        .arg("--volume=-1")
+        .arg("--no-terminal")
+        .arg("/home/noah/Downloads/icelandwaterfall.mp4")
+        .spawn()?;
 
-    println!("{}", apikey.key);
-    Ok(apikey)
+    Ok(child)
 }
 
-async fn get_videos(client: Rc<Client>, url: &str, id: &str, apikey: Apikey) -> Result<()> {
-    let videos: Vec<Video> = client 
-        .get(String::from(url) + "/recieve-videos/" + id)
-        .header("APIKEY", apikey.key)
+async fn get_new_key(client: &Client, config: &Config) -> Result<Apikey, Box<dyn Error>> {
+    let res: Apikey = client
+        .get(format!("{}/get-new-key/{}", config.url, config.id))
         .send()
         .await?
         .json()
         .await?;
 
-    println!("{:?}", videos);
+    println!("{}", res.key);
+    Ok(res)
+}
+
+async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
+    let res: Updated = client
+        .get(format!("{}/sync/{}", config.url, config.id))
+        .header("APIKEY", config.key.clone().unwrap())
+        .send()
+        .await?
+        .json()
+        .await?;
+
+    println!("{:?}", res.updated);
+
+    Ok(res.updated)
+}
+
+async fn recieve_videos(client: &Client, config: &Config) -> Result<Vec<Video>, Box<dyn Error>> {
+    let res: Vec<Video> = client
+        .get(format!("{}/recieve-videos/{}", config.url, config.id))
+        .header("APIKEY", config.key.clone().unwrap())
+        .send()
+        .await?
+        .json()
+        .await?;
+
+    println!("{:?}", res);
+    Ok(res)
+}
+
+async fn update_videos(
+    client: &Client,
+    config: &Config,
+    data: &mut Data,
+    updated: Option<DateTime<Utc>>,
+) -> Result<(), Box<dyn Error>> {
+    data.videos = recieve_videos(&client, &config).await?;
+    data.last_update = updated;
+    data.write().await?;
+
+    // for video in data.videos.clone() {
+    //     video.download(&client).await?;
+    // }
+
     Ok(())
 }
