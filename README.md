@@ -1,3 +1,5 @@
+`cargo run` to run the client
+
 ## TODO:
 - configuration under /etc/signage/signage.conf
 - video file and data storage under /var/lib/signage/
