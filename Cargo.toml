@@ -11,7 +11,8 @@ rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 anyhow = "1.0.74"
 chrono = { version = "0.4.26", features = ["serde"] }
 daemonize = "0.5.0"
-reqwest = { version = "0.11.18", features = ["blocking", "json"] }
+futures-util = "0.3.28"
+reqwest = { version = "0.11.18", features = ["blocking", "json", "stream", "rustls", "tokio-rustls"] }
 serde = { version = "1.0.183", features = ["derive"] }
 serde_json = "1.0.104"
 tokio = { version = "1.31.0", features = ["full"] }
