@@ -15,6 +15,7 @@ impl Data {
         Default::default()
     }
 
+    /// Loads `Data` from $HOME/.local/share/signage/data.json
     pub async fn load(self: &mut Self) -> Result<(), Box<dyn Error>> {
         load_json(
             self,
@@ -24,6 +25,7 @@ impl Data {
         .await
     }
 
+    /// Writes `Data` to $HOME/.local/share/signage/data.json
     pub async fn write(self: &Self) -> Result<(), Box<dyn Error>> {
         write_json(
             self,

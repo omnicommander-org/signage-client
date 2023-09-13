@@ -17,14 +17,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut data = Data::new();
     let client = Client::new();
 
+    // Load the configs
     config.load().await?;
     data.load().await?;
 
+    // Get the videos if we've never updated
     if data.last_update.is_none() {
         let updated = sync(&client, &config).await?;
         update_videos(&client, &config, &mut data, updated).await?;
     }
 
+    // Get our api key
     if config.key.is_none() {
         config.key = Some(get_new_key(&client, &config).await?.key);
     }
@@ -38,11 +41,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         let updated = sync(&client, &config).await?;
 
+        // Update videos if the group was updated
         if updated > data.last_update {
             update_videos(&client, &config, &mut data, updated).await?;
             mpv.kill().await?;
         }
 
+        // Restart mpv if it exits
         match mpv.try_wait() {
             Ok(Some(_)) => mpv = start_mpv().await?,
             Ok(None) => (),

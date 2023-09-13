@@ -25,6 +25,7 @@ pub struct Updated {
 }
 
 impl Video {
+    /// Downloads videos to `$HOME/.local/share/signage`
     pub async fn download(self: &Self, client: &Client) -> Result<(), Box<dyn std::error::Error>> {
         let mut stream = client.get(self.url.clone()).send().await?.bytes_stream();
         let mut file = tokio::fs::File::create(format!(
@@ -42,6 +43,7 @@ impl Video {
     }
 }
 
+/// Loads json from `dir/filename` into `T`
 pub async fn load_json<T: Serialize + DeserializeOwned>(
     json: &mut T,
     dir: &str,
@@ -63,6 +65,7 @@ pub async fn load_json<T: Serialize + DeserializeOwned>(
     Ok(())
 }
 
+/// Writes json from `T` into `path`
 pub async fn write_json<T: Serialize>(json: &T, path: &str) -> Result<(), Box<dyn Error>> {
     let mut file = File::create(path).await?;
     file.write_all(&serde_json::to_vec_pretty(&json)?).await?;

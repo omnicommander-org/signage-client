@@ -14,6 +14,7 @@ impl Config {
         Default::default()
     }
 
+    /// Loads `Config` from $HOME/config/signage/signage.json
     pub async fn load(self: &mut Self) -> Result<(), Box<dyn Error>> {
         load_json(
             self,
@@ -23,6 +24,7 @@ impl Config {
         .await
     }
 
+    /// Writes `Config` to $HOME/config/signage/signage.json
     pub async fn write(self: &Self) -> Result<(), Box<dyn Error>> {
         write_json(
             self,
