@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use futures_util::StreamExt;
 use reqwest::Client;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{boxed::Box, error::Error, fs, path::Path};
@@ -25,16 +26,17 @@ pub struct Updated {
 
 impl Video {
     pub async fn download(self: &Self, client: &Client) -> Result<(), Box<dyn std::error::Error>> {
-        let res = client.get(self.url.clone()).send().await?;
-        let content = res.text().await?;
+        let mut stream = client.get(self.url.clone()).send().await?.bytes_stream();
         let mut file = tokio::fs::File::create(format!(
-            "{}/.local/share/signage/{}",
+            "{}/.local/share/signage/{}.mp4",
             std::env::var("HOME")?,
             self.title
         ))
         .await?;
 
-        tokio::io::copy(&mut content.as_bytes(), &mut file).await?;
+        while let Some(content) = stream.next().await {
+            tokio::io::copy(&mut content?.as_ref(), &mut file).await?;
+        }
 
         Ok(())
     }

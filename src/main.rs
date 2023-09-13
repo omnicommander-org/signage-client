@@ -25,14 +25,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         update_videos(&client, &config, &mut data, updated).await?;
     }
 
-    let mut mpv = start_mpv().await?;
-
     if config.key.is_none() {
         config.key = Some(get_new_key(&client, &config).await?.key);
     }
     config.write().await?;
 
     let mut interval = time::interval(Duration::from_secs(5));
+    let mut mpv = start_mpv().await?;
 
     loop {
         interval.tick().await;
@@ -113,9 +112,9 @@ async fn update_videos(
     data.last_update = updated;
     data.write().await?;
 
-    // for video in data.videos.clone() {
-    //     video.download(&client).await?;
-    // }
+    for video in data.videos.clone() {
+        video.download(&client).await?;
+    }
 
     Ok(())
 }
