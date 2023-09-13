@@ -5,6 +5,7 @@ use reqwest::Client;
 use std::{boxed::Box, error::Error};
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
+use tokio::io::AsyncWriteExt;
 use util::{Apikey, Updated, Video};
 
 mod config;
@@ -62,7 +63,7 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
         .arg("--loop-playlist=inf")
         .arg("--volume=-1")
         .arg("--no-terminal")
-        .arg("/home/noah/Downloads/icelandwaterfall.mp4")
+        .arg(format!("--playlist={}/.local/share/signage/playlist.txt", std::env::var("HOME")?))
         .spawn()?;
 
     Ok(child)
@@ -116,9 +117,18 @@ async fn update_videos(
     data.videos = recieve_videos(&client, &config).await?;
     data.last_update = updated;
     data.write().await?;
+    
+    let home = std::env::var("HOME")?;
+
+    let mut file = tokio::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(format!("{}/.local/share/signage/playlist.txt", home))
+        .await?;
 
     for video in data.videos.clone() {
         video.download(&client).await?;
+        file.write(format!("{}/.local/share/signage/{}.mp4", home, video.title).as_bytes()).await?;
     }
 
     Ok(())
