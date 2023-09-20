@@ -22,17 +22,17 @@ async fn main() -> Result<(), Box<dyn Error>> {
     config.load().await?;
     data.load().await?;
 
-    // Get the videos if we've never updated
-    if data.last_update.is_none() {
-        let updated = sync(&client, &config).await?;
-        update_videos(&client, &config, &mut data, updated).await?;
-    }
-
     // Get our api key
     if config.key.is_none() {
         config.key = Some(get_new_key(&client, &config).await?.key);
     }
     config.write().await?;
+
+    // Get the videos if we've never updated
+    if data.last_update.is_none() {
+        let updated = sync(&client, &config).await?;
+        update_videos(&client, &config, &mut data, updated).await?;
+    }
 
     let mut interval = time::interval(Duration::from_secs(5));
     let mut mpv = start_mpv().await?;
