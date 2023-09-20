@@ -1,7 +1,6 @@
 `cargo run` to run the client
 
 ## TODO:
-- configuration under /etc/signage/signage.conf
-- video file and data storage under /var/lib/signage/
-- sync with server regularly
-- download whenever the group is updated
+- only download videos from whitelist
+- move from tokio to blocking (we actually don't need tokio at all)
+- release binaries
