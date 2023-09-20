@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Load the configs
     config.load().await?;
     data.load().await?;
-
+    
     // Get our api key
     if config.key.is_none() {
         config.key = Some(get_new_key(&client, &config).await?.key);
@@ -129,7 +129,7 @@ async fn update_videos(
 
     for video in data.videos.clone() {
         video.download(&client).await?;
-        file.write(format!("{}/.local/share/signage/{}.mp4", home, video.title).as_bytes()).await?;
+        file.write(format!("{}/.local/share/signage/{}.mp4\n", home, video.title).as_bytes()).await?;
     }
 
     Ok(())
