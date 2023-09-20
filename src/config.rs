@@ -6,6 +6,8 @@ use std::{boxed::Box, env, error::Error};
 pub struct Config {
     pub url: String,
     pub id: String,
+    pub username: String,
+    pub password: String,
     pub key: Option<String>,
 }
 
