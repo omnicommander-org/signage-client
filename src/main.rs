@@ -34,7 +34,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         update_videos(&client, &config, &mut data, updated).await?;
     }
 
-    let mut interval = time::interval(Duration::from_secs(5));
+    let mut interval = time::interval(Duration::from_secs(30));
     let mut mpv = start_mpv().await?;
 
     loop {
@@ -121,13 +121,21 @@ async fn update_videos(
     
     let home = std::env::var("HOME")?;
 
+    // Remove the playlist file
+    tokio::fs::remove_file(format!("{}/.local/share/signage/playlist.txt", home)).await?;
+
+    // Open the playlist file
     let mut file = tokio::fs::OpenOptions::new()
         .create(true)
+        .append(true)
         .open(format!("{}/.local/share/signage/playlist.txt", home))
         .await?;
 
     for video in data.videos.clone() {
+        // Download the video
         video.download(&client).await?;
+
+        // Write the path to the playlist file
         file.write(format!("{}/.local/share/signage/{}.mp4\n", home, video.title).as_bytes()).await?;
     }
 
