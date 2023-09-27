@@ -16,7 +16,7 @@ This will download and compile all of the dependencies, as well as compile and r
 
 There are two directories to be aware of:
 
-1. `~/.config/signage` for the config file
+1. `~/.config/signage` for the config file (`signage.json`)
 2. `~/.local/share/signage` for data, video, and playlist files
 
 ## TODO:
