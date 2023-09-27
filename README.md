@@ -19,6 +19,16 @@ There are two directories to be aware of:
 1. `~/.config/signage` for the config file (`signage.json`)
 2. `~/.local/share/signage` for data, video, and playlist files
 
+### Example `signage.json`
+```json
+{
+  "url": "https://ds-api.omnicommando.com",
+  "id": "<client_id>",
+  "username": "<username>",
+  "password": "<password>"
+}
+```
+
 ## TODO:
 
 - only download videos from whitelist
