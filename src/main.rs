@@ -123,7 +123,6 @@ async fn update_videos(
 
     let mut file = tokio::fs::OpenOptions::new()
         .create(true)
-        .append(true)
         .open(format!("{}/.local/share/signage/playlist.txt", home))
         .await?;
 
