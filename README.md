@@ -4,13 +4,11 @@ The client daemon for Digital Signage. It is designed to run continuously in the
 
 ## Getting Started
 
-Before you can run the client, you need Rust installed.
+Before you can run the client, you need Rust installed: [Rust Getting Started Guide](https://www.rust-lang.org/learn/get-started).
 
-[Rust Getting Started Guide](https://www.rust-lang.org/learn/get-started)
+Additionally, a config file at `~/.config/signage/signage.json` needs to be set up properly (see the "Configuration" section for more information).
 
-To run the client, use `cargo run`.
-
-This will download and compile all of the dependencies, as well as compile and run the client.
+To run the client, use `cargo run`. This will download and compile all of the dependencies, as well as compile and run the client.
 
 ## Configuration
 
