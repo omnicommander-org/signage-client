@@ -19,7 +19,7 @@ There are two directories to be aware of:
 1. `~/.config/signage` for the config file (`signage.json`)
 2. `~/.local/share/signage` for data, video, and playlist files
 
-### Example `signage.json`
+### Example signage.json
 ```json
 {
   "url": "https://ds-api.omnicommando.com",
