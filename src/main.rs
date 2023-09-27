@@ -57,6 +57,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 }
 
+/// Starts the mpv player with the proper playlist and flags
 async fn start_mpv() -> Result<Child, Box<dyn Error>> {
     let child = Command::new("mpv")
         // .arg("-fs")
@@ -69,6 +70,7 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
     Ok(child)
 }
 
+/// Makes the proper request to recieve an apikey
 async fn get_new_key(client: &Client, config: &Config) -> Result<Apikey, Box<dyn Error>> {
     let res: Apikey = client
         .get(format!("{}/get-new-key/{}", config.url, config.id))
@@ -82,6 +84,7 @@ async fn get_new_key(client: &Client, config: &Config) -> Result<Apikey, Box<dyn
     Ok(res)
 }
 
+/// Makes the proper request to recieve the last time the connected group was updated
 async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
     let res: Updated = client
         .get(format!("{}/sync/{}", config.url, config.id))
@@ -96,6 +99,7 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
     Ok(res.updated)
 }
 
+/// Makes the proper request to recieve the list of videos
 async fn recieve_videos(client: &Client, config: &Config) -> Result<Vec<Video>, Box<dyn Error>> {
     let res: Vec<Video> = client
         .get(format!("{}/recieve-videos/{}", config.url, config.id))
@@ -109,6 +113,7 @@ async fn recieve_videos(client: &Client, config: &Config) -> Result<Vec<Video>, 
     Ok(res)
 }
 
+/// Recieves and downloads videos and writes to the playlist file
 async fn update_videos(
     client: &Client,
     config: &Config,
