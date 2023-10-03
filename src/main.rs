@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use config::Config;
 use data::Data;
 use reqwest::Client;
-use std::{boxed::Box, error::Error};
+use std::{boxed::Box, error::Error, path::Path};
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
@@ -127,7 +127,9 @@ async fn update_videos(
     let home = std::env::var("HOME")?;
 
     // Remove the playlist file
-    tokio::fs::remove_file(format!("{}/.local/share/signage/playlist.txt", home)).await?;
+    if Path::new(&format!("{}/.local/share/signage/playlist.txt", home)).try_exists()? {
+        tokio::fs::remove_file(format!("{}/.local/share/signage/playlist.txt", home)).await?;
+    }
 
     // Open the playlist file
     let mut file = tokio::fs::OpenOptions::new()
