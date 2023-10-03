@@ -41,6 +41,20 @@ impl Video {
 
         Ok(())
     }
+
+    pub fn in_whitelist(self: &Self) -> bool {
+        let whitelist = [
+            "player.vimeo.com",
+        ];
+
+        for url in whitelist {
+            if self.url.contains(&url) {
+                return true;
+            }
+        }
+
+        false
+    }
 }
 
 /// Loads json from `dir/filename` into `T`

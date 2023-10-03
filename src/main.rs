@@ -139,6 +139,10 @@ async fn update_videos(
         .await?;
 
     for video in data.videos.clone() {
+        if !video.in_whitelist() {
+            continue;
+        }
+
         // Download the video
         video.download(&client).await?;
 
