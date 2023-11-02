@@ -8,7 +8,6 @@ pkgs.mkShell {
 		pkg-config
 		sqlx-cli
 		mpv
-		socat
 		mold
 	];
 }
