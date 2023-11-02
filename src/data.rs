@@ -12,11 +12,11 @@ pub struct Data {
 
 impl Data {
     pub fn new() -> Self {
-        Default::default()
+        Data::default()
     }
 
     /// Loads `Data` from $HOME/.local/share/signage/data.json
-    pub async fn load(self: &mut Self) -> Result<(), Box<dyn Error>> {
+    pub async fn load(&mut self) -> Result<(), Box<dyn Error>> {
         load_json(
             self,
             &format!("{}/.local/share/signage", env::var("HOME")?),
@@ -26,7 +26,7 @@ impl Data {
     }
 
     /// Writes `Data` to $HOME/.local/share/signage/data.json
-    pub async fn write(self: &Self) -> Result<(), Box<dyn Error>> {
+    pub async fn write(&self) -> Result<(), Box<dyn Error>> {
         write_json(
             self,
             &format!("{}/.local/share/signage/data.json", env::var("HOME")?),

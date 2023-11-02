@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let mut interval = time::interval(Duration::from_secs(30));
-    let mut mpv = start_mpv().await?;
+    let mut mpv = start_mpv()?;
 
     loop {
         interval.tick().await;
@@ -50,15 +50,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         // Restart mpv if it exits
         match mpv.try_wait() {
-            Ok(Some(_)) => mpv = start_mpv().await?,
+            Ok(Some(_)) => mpv = start_mpv()?,
             Ok(None) => (),
-            Err(error) => eprintln!("{}", error),
+            Err(error) => eprintln!("{error}"),
         }
     }
 }
 
 /// Starts the mpv player with the proper playlist and flags
-async fn start_mpv() -> Result<Child, Box<dyn Error>> {
+fn start_mpv() -> Result<Child, Box<dyn Error>> {
     let child = Command::new("mpv")
         // .arg("-fs")
         .arg("--loop-playlist=inf")
@@ -109,7 +109,7 @@ async fn recieve_videos(client: &Client, config: &Config) -> Result<Vec<Video>, 
         .json()
         .await?;
 
-    println!("{:?}", res);
+    println!("{res:?}");
     Ok(res)
 }
 
@@ -120,22 +120,22 @@ async fn update_videos(
     data: &mut Data,
     updated: Option<DateTime<Utc>>,
 ) -> Result<(), Box<dyn Error>> {
-    data.videos = recieve_videos(&client, &config).await?;
+    data.videos = recieve_videos(client, config).await?;
     data.last_update = updated;
     data.write().await?;
     
     let home = std::env::var("HOME")?;
 
     // Remove the playlist file
-    if Path::new(&format!("{}/.local/share/signage/playlist.txt", home)).try_exists()? {
-        tokio::fs::remove_file(format!("{}/.local/share/signage/playlist.txt", home)).await?;
+    if Path::new(&format!("{home}/.local/share/signage/playlist.txt")).try_exists()? {
+        tokio::fs::remove_file(format!("{home}/.local/share/signage/playlist.txt")).await?;
     }
 
     // Open the playlist file
     let mut file = tokio::fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(format!("{}/.local/share/signage/playlist.txt", home))
+        .open(format!("{home}/.local/share/signage/playlist.txt"))
         .await?;
 
     for video in data.videos.clone() {
@@ -144,10 +144,10 @@ async fn update_videos(
         }
 
         // Download the video
-        video.download(&client).await?;
+        video.download(client).await?;
 
         // Write the path to the playlist file
-        file.write(format!("{}/.local/share/signage/{}.mp4\n", home, video.title).as_bytes()).await?;
+        file.write_all(format!("{}/.local/share/signage/{}.mp4\n", home, video.title).as_bytes()).await?;
     }
 
     Ok(())

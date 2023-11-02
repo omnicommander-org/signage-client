@@ -26,7 +26,7 @@ pub struct Updated {
 
 impl Video {
     /// Downloads videos to `$HOME/.local/share/signage`
-    pub async fn download(self: &Self, client: &Client) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn download(&self, client: &Client) -> Result<(), Box<dyn std::error::Error>> {
         let mut stream = client.get(self.url.clone()).send().await?.bytes_stream();
         let mut file = tokio::fs::File::create(format!(
             "{}/.local/share/signage/{}.mp4",
@@ -42,13 +42,13 @@ impl Video {
         Ok(())
     }
 
-    pub fn in_whitelist(self: &Self) -> bool {
+    pub fn in_whitelist(&self) -> bool {
         let whitelist = [
             "player.vimeo.com",
         ];
 
         for url in whitelist {
-            if self.url.contains(&url) {
+            if self.url.contains(url) {
                 return true;
             }
         }
@@ -63,17 +63,14 @@ pub async fn load_json<T: Serialize + DeserializeOwned>(
     dir: &str,
     filename: &str,
 ) -> Result<(), Box<dyn Error>> {
-    if !Path::new(&format!("{}/{}", dir, filename)).try_exists()? {
-        match fs::create_dir_all(dir) {
-            Ok(_) => (),
-            Err(_) => (),
-        };
-        write_json(json, &format!("{}/{}", dir, filename)).await?;
-    } else {
-        let mut file = File::open(format!("{}/{}", dir, filename)).await?;
+    if Path::new(&format!("{dir}/{filename}")).try_exists()? {
+        let mut file = File::open(format!("{dir}/{filename}")).await?;
         let mut contents = vec![];
         file.read_to_end(&mut contents).await?;
         *json = serde_json::from_slice(&contents)?;
+    } else {
+        fs::create_dir_all(dir)?;
+        write_json(json, &format!("{dir}/{filename}")).await?;
     }
 
     Ok(())
