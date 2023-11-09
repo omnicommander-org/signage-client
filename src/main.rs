@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let mut interval = time::interval(Duration::from_secs(30));
-    let mut mpv = start_mpv()?;
+    let mut mpv = start_mpv().await?;
 
     loop {
         interval.tick().await;
@@ -50,7 +50,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         // Restart mpv if it exits
         match mpv.try_wait() {
-            Ok(Some(_)) => mpv = start_mpv()?,
+            Ok(Some(_)) => mpv = start_mpv().await?,
             Ok(None) => (),
             Err(error) => eprintln!("{error}"),
         }
@@ -58,7 +58,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
 }
 
 /// Starts the mpv player with the proper playlist and flags
-fn start_mpv() -> Result<Child, Box<dyn Error>> {
+async fn start_mpv() -> Result<Child, Box<dyn Error>> {
+    let mut interval = time::interval(Duration::from_secs(1));
+    loop {
+        if std::env::var("DISPLAY").is_ok() {
+            break;
+        }
+        interval.tick().await;
+    }
+
     let child = Command::new("mpv")
         // .arg("-fs")
         .arg("--loop-playlist=inf")
