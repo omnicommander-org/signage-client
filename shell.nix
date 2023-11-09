@@ -8,7 +8,7 @@ pkgs.mkShell {
 		pkg-config
 		sqlx-cli
 		mpv
-		mold
+		cargo-deny
 	];
 }
 
