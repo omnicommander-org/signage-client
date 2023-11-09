@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use config::Config;
 use data::Data;
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 use std::{boxed::Box, error::Error, path::Path};
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
@@ -21,6 +21,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Load the configs
     config.load().await?;
     data.load().await?;
+
+    let _ = wait_for_api(&client, &config).await;
     
     // Get our api key
     if config.key.is_none() {
@@ -55,6 +57,26 @@ async fn main() -> Result<(), Box<dyn Error>> {
             Err(error) => eprintln!("{error}"),
         }
     }
+}
+
+/// Loops until we get a response from the api to make sure our network is online
+async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn Error>> {
+    let mut interval = time::interval(Duration::from_secs(1));
+    loop {
+        let res = client.get(format!("{}/health", config.url)).send().await;
+        if res.is_ok() {
+            match res.unwrap().status() {
+                StatusCode::OK => break,
+                StatusCode::INTERNAL_SERVER_ERROR => {
+                    interval.tick().await;
+                },
+                _ => (),
+            }
+        }
+        interval.tick().await;
+    }
+
+    Ok(true)
 }
 
 /// Starts the mpv player with the proper playlist and flags
