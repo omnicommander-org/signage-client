@@ -13,11 +13,11 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Self {
-        Default::default()
+        Config::default()
     }
 
     /// Loads `Config` from $HOME/config/signage/signage.json
-    pub async fn load(self: &mut Self) -> Result<(), Box<dyn Error>> {
+    pub async fn load(&mut self) -> Result<(), Box<dyn Error>> {
         load_json(
             self,
             &format!("{}/.config/signage", env::var("HOME")?),
@@ -27,7 +27,7 @@ impl Config {
     }
 
     /// Writes `Config` to $HOME/config/signage/signage.json
-    pub async fn write(self: &Self) -> Result<(), Box<dyn Error>> {
+    pub async fn write(&self) -> Result<(), Box<dyn Error>> {
         write_json(
             self,
             &format!("{}/.config/signage/signage.json", env::var("HOME")?),
