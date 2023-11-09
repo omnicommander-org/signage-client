@@ -68,7 +68,7 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
             match res.unwrap().status() {
                 StatusCode::OK => break,
                 StatusCode::INTERNAL_SERVER_ERROR => {
-                    interval.tick().await;
+                    time::interval(Duration::from_secs(120)).tick().await;
                 },
                 _ => (),
             }
@@ -81,14 +81,6 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
 
 /// Starts the mpv player with the proper playlist and flags
 async fn start_mpv() -> Result<Child, Box<dyn Error>> {
-    let mut interval = time::interval(Duration::from_secs(1));
-    loop {
-        if std::env::var("DISPLAY").is_ok() {
-            break;
-        }
-        interval.tick().await;
-    }
-
     let child = Command::new("mpv")
         // .arg("-fs")
         .arg("--loop-playlist=inf")
