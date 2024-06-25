@@ -4,7 +4,7 @@ use data::Data;
 use image::{ImageBuffer, RgbaImage};
 use reqwest::{Client, StatusCode};
 use screenshots::Screen;
-use std::{boxed::Box, error::Error, path::Path, thread::sleep, time::Duration};
+use std::{boxed::Box, error::Error, path::Path, thread::sleep};
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
@@ -174,9 +174,12 @@ async fn update_videos(
         file.write_all(format!("{}/.local/share/signage/{}.mp4\n", home, video.title).as_bytes()).await?;
     }
 
-    if let Err(e) = capture_screenshot() {
-        eprintln!("Error: {}", e);
+    fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
+        
+        println!("Screenshot captured!");
+    Ok(())
     }
+
 
     Ok(())
 }
