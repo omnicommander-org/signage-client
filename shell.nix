@@ -9,6 +9,7 @@ pkgs.mkShell {
 		sqlx-cli
 		mpv
 		cargo-deny
+        xorg.libxcb
 	];
 }
 
