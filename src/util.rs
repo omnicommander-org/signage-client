@@ -96,7 +96,3 @@ pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
-pub fn upload_screenshot() -> Result<(), Box<dyn std::error::Error>> {
-    Ok(())
-}

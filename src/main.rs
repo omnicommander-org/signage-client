@@ -1,10 +1,8 @@
 use chrono::{DateTime, Utc};
 use config::Config;
 use data::Data;
-use image::{ImageBuffer, RgbaImage};
 use reqwest::{Client, StatusCode};
-use screenshots::Screen;
-use std::{boxed::Box, error::Error, path::Path, thread::sleep};
+use std::{boxed::Box, error::Error, path::Path};
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;

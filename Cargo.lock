@@ -1326,7 +1326,6 @@ dependencies = [
  "chrono",
  "daemonize",
  "futures-util",
- "image",
  "reqwest",
  "screenshots",
  "serde",
