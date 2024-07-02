@@ -1,6 +1,8 @@
+use anyhow::Result;
 use chrono::{DateTime, Utc};
 use futures_util::StreamExt;
 use reqwest::Client;
+use screenshots::Screen;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{boxed::Box, error::Error, fs, path::Path};
 use tokio::{
@@ -80,6 +82,17 @@ pub async fn load_json<T: Serialize + DeserializeOwned>(
 pub async fn write_json<T: Serialize>(json: &T, path: &str) -> Result<(), Box<dyn Error>> {
     let mut file = File::create(path).await?;
     file.write_all(&serde_json::to_vec_pretty(&json)?).await?;
+
+    Ok(())
+}
+
+pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
+    let screens = Screen::all()?;
+
+    for screen in screens {
+        let image = screen.capture()?;
+        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
+    }
 
     Ok(())
 }
