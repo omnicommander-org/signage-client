@@ -27,8 +27,6 @@ pub struct Updated {
 impl Video {
     /// Downloads videos or images to `$HOME/.local/share/signage`
     pub async fn download(&self, client: &Client) -> Result<String, Box<dyn std::error::Error>> {
-        let mut stream = client.get(&self.asset_url).send().await?.bytes_stream();
-
         // Extract the file extension from the URL
         let path = Path::new(&self.asset_url);
         let extension = path.extension().and_then(std::ffi::OsStr::to_str).unwrap_or("bin");
@@ -40,7 +38,15 @@ impl Video {
             extension
         );
 
-        let mut file = tokio::fs::File::create(&file_path).await?;
+        // Check if the file already exists
+        if Path::new(&file_path).exists() {
+            println!("File already exists: {}", file_path);
+            return Ok(file_path);
+        }
+
+        // Proceed with downloading the file
+        let mut stream = client.get(&self.asset_url).send().await?.bytes_stream();
+        let mut file = fs::File::create(&file_path).await?;
 
         while let Some(content) = stream.next().await {
             tokio::io::copy(&mut content?.as_ref(), &mut file).await?;
@@ -67,6 +73,7 @@ impl Video {
         false
     }
 }
+
 
 /// Loads json from `dir/filename` into `T`
 pub async fn load_json<T: Serialize + DeserializeOwned>(
