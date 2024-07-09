@@ -117,11 +117,12 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
 
     // Read the directory contents
     let mut dir_entries = fs::read_dir(dir).await?;
-    println!("Files in existance: {}", dir_entries);
+
     while let Some(entry) = dir_entries.next_entry().await? {
         let path = entry.path();
         if path.is_file() {
             let filename = path.file_name().unwrap().to_string_lossy().to_string();
+            println!("Files in existance: {}", filename);
             // Ignore playlist.txt and data.json
             if filename != "playlist.txt" && filename != "data.json" {
                 // Delete the file if it's not in playlist.txt
