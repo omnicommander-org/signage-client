@@ -24,20 +24,31 @@ pub struct Updated {
     pub updated: Option<DateTime<Utc>>,
 }
 
+use std::path::Path;
+
 impl Video {
-    /// Downloads videos to `$HOME/.local/share/signage`
+    /// Downloads videos or images to `$HOME/.local/share/signage`
     pub async fn download(&self, client: &Client) -> Result<(), Box<dyn std::error::Error>> {
-        let mut stream = client.get(self.asset_url.clone()).send().await?.bytes_stream();
-        let mut file = tokio::fs::File::create(format!(
-            "{}/.local/share/signage/{}.mp4",
+        let mut stream = client.get(&self.asset_url).send().await?.bytes_stream();
+
+        // Extract the file extension from the URL
+        let path = Path::new(&self.asset_url);
+        let extension = path.extension().and_then(std::ffi::OsStr::to_str).unwrap_or("bin");
+
+        let file_path = format!(
+            "{}/.local/share/signage/{}.{}",
             std::env::var("HOME")?,
-            self.id
-        ))
-        .await?;
+            self.id,
+            extension
+        );
+
+        let mut file = tokio::fs::File::create(&file_path).await?;
 
         while let Some(content) = stream.next().await {
             tokio::io::copy(&mut content?.as_ref(), &mut file).await?;
         }
+
+        println!("Downloaded to: {}", file_path);
 
         Ok(())
     }
@@ -50,7 +61,7 @@ impl Video {
         for url in whitelist {
             if self.asset_url.contains(url) {
                 return true;
-            }else{
+            } else {
                 println!("Downloading video: {}", self.asset_url.contains(url));
             }
         }
@@ -58,6 +69,7 @@ impl Video {
         false
     }
 }
+
 
 /// Loads json from `dir/filename` into `T`
 pub async fn load_json<T: Serialize + DeserializeOwned>(
