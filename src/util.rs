@@ -24,8 +24,6 @@ pub struct Updated {
     pub updated: Option<DateTime<Utc>>,
 }
 
-use std::path::Path;
-
 impl Video {
     /// Downloads videos or images to `$HOME/.local/share/signage`
     pub async fn download(&self, client: &Client) -> Result<(), Box<dyn std::error::Error>> {
@@ -69,7 +67,6 @@ impl Video {
         false
     }
 }
-
 
 /// Loads json from `dir/filename` into `T`
 pub async fn load_json<T: Serialize + DeserializeOwned>(
