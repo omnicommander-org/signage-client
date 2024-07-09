@@ -58,9 +58,7 @@ impl Video {
     }
 
     pub fn in_whitelist(&self) -> bool {
-        let whitelist = [
-            "s3.amazonaws.com",
-        ];
+        let whitelist = ["s3.amazonaws.com"];
 
         for url in whitelist {
             if self.asset_url.contains(url) {
@@ -73,7 +71,6 @@ impl Video {
         false
     }
 }
-
 
 /// Loads json from `dir/filename` into `T`
 pub async fn load_json<T: Serialize + DeserializeOwned>(
