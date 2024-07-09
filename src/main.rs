@@ -94,11 +94,14 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
 /// Starts the mpv player with the proper playlist and flags
 async fn start_mpv() -> Result<Child, Box<dyn Error>> {
     println!("Starting mpv player...");
+    let image_display_duration = 10;
     let child = Command::new("mpv")
         .arg("--loop-playlist=inf")
         .arg("--volume=-1")
         .arg("--no-terminal")
         .arg("--fullscreen")
+        .arg(format!("--image-display-duration={}", image_display_duration))
+        .arg("--lavfi-complex=[vid1]split[v1][v2];[v1]fade=t=in:st=0:d=1,fade=t=out:st=9:d=1[v1];[v2][v1]overlay") 
         .arg(format!("--playlist={}/.local/share/signage/playlist.txt", std::env::var("HOME")?))
         .spawn()?;
 
