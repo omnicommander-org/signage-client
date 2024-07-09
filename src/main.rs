@@ -101,7 +101,6 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
         .arg("--no-terminal")
         .arg("--fullscreen")
         .arg(format!("--image-display-duration={}", image_display_duration))
-        .arg("--lavfi-complex=[vid1]split[v1][v2];[v1]fade=t=in:st=0:d=1,fade=t=out:st=9:d=1[v1];[v2][v1]overlay") 
         .arg(format!("--playlist={}/.local/share/signage/playlist.txt", std::env::var("HOME")?))
         .spawn()?;
 
