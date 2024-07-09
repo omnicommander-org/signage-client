@@ -208,14 +208,15 @@ async fn update_videos(
             continue;
         }
 
-        // Download the video
+        // Download the video and get the file path
         println!("Downloading video: {}", video.id);
-        video.download(client).await?;
+        let file_path = video.download(client).await?;
 
         // Write the path to the playlist file
-        file.write_all(format!("{}/.local/share/signage/{}.mp4\n", home, video.id).as_bytes()).await?;
+        file.write_all(format!("{}\n", file_path).as_bytes()).await?;
     }
 
     println!("Updated playlist file.");
     Ok(())
 }
+
