@@ -15,8 +15,8 @@ pub struct Apikey {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Video {
-    pub title: String,
-    pub url: String,
+    pub id: String,
+    pub asset_url: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -27,11 +27,11 @@ pub struct Updated {
 impl Video {
     /// Downloads videos to `$HOME/.local/share/signage`
     pub async fn download(&self, client: &Client) -> Result<(), Box<dyn std::error::Error>> {
-        let mut stream = client.get(self.url.clone()).send().await?.bytes_stream();
+        let mut stream = client.get(self.asset_url.clone()).send().await?.bytes_stream();
         let mut file = tokio::fs::File::create(format!(
             "{}/.local/share/signage/{}.mp4",
             std::env::var("HOME")?,
-            self.title
+            self.id
         ))
         .await?;
 
@@ -48,7 +48,7 @@ impl Video {
         ];
 
         for url in whitelist {
-            if self.url.contains(url) {
+            if self.asset_url.contains(url) {
                 return true;
             }
         }
