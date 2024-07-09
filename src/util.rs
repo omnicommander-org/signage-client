@@ -4,7 +4,7 @@ use reqwest::Client;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{boxed::Box, error::Error, path::Path};
 use tokio::{
-    fs::File,
+    fs::{self, File},
     io::{AsyncReadExt, AsyncWriteExt},
 };
 
