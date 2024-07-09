@@ -50,6 +50,8 @@ impl Video {
         for url in whitelist {
             if self.asset_url.contains(url) {
                 return true;
+            }else{
+                println!("Downloading video: {}", self.asset_url.contains(url));
             }
         }
 
