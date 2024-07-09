@@ -210,15 +210,12 @@ async fn update_videos(
         if !video.in_whitelist() {
             continue;
         }
-
         // Download the video and get the file path
         println!("Downloading video: {}", video.id);
         let file_path = video.download(client).await?;
-
         // Write the path to the playlist file
         file.write_all(format!("{}\n", file_path).as_bytes()).await?;
     }
-
     println!("Updated playlist file.");
     Ok(())
 }
