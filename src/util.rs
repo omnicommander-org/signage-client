@@ -26,7 +26,7 @@ pub struct Updated {
 
 impl Video {
     /// Downloads videos or images to `$HOME/.local/share/signage`
-    pub async fn download(&self, client: &Client) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn download(&self, client: &Client) -> Result<String, Box<dyn std::error::Error>> {
         let mut stream = client.get(&self.asset_url).send().await?.bytes_stream();
 
         // Extract the file extension from the URL
@@ -48,7 +48,7 @@ impl Video {
 
         println!("Downloaded to: {}", file_path);
 
-        Ok(())
+        Ok(file_path)
     }
 
     pub fn in_whitelist(&self) -> bool {
@@ -60,7 +60,7 @@ impl Video {
             if self.asset_url.contains(url) {
                 return true;
             } else {
-                println!("Downloading video: {}", self.asset_url.contains(url));
+                println!("URL not in whitelist: {}", self.asset_url);
             }
         }
 
