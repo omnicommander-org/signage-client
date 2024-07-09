@@ -44,7 +44,7 @@ impl Video {
 
     pub fn in_whitelist(&self) -> bool {
         let whitelist = [
-            "s3.amazonaws.com/",
+            "s3.amazonaws.com",
         ];
 
         for url in whitelist {
