@@ -103,6 +103,7 @@ pub async fn write_json<T: Serialize>(json: &T, path: &str) -> Result<(), Box<dy
 
 /// Cleans up the signage directory by removing files not listed in playlist.txt
 pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
+    println!("Running file cleanup...");
     // Read the playlist.txt file
     let playlist_path = format!("{}/playlist.txt", dir);
     let mut playlist_file = File::open(&playlist_path).await?;
