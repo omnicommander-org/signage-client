@@ -117,6 +117,7 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
 
     // Read the directory contents
     let mut dir_entries = fs::read_dir(dir).await?;
+    println!("Files in existance: {}", dir_entries);
     while let Some(entry) = dir_entries.next_entry().await? {
         let path = entry.path();
         if path.is_file() {
