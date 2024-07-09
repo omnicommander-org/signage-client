@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use futures_util::StreamExt;
 use reqwest::Client;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{boxed::Box, error::Error, fs, path::Path};
+use std::{boxed::Box, error::Error, path::Path};
 use tokio::{
     fs::File,
     io::{AsyncReadExt, AsyncWriteExt},
@@ -46,7 +46,7 @@ impl Video {
 
         // Proceed with downloading the file
         let mut stream = client.get(&self.asset_url).send().await?.bytes_stream();
-        let mut file = fs::File::create(&file_path).await?;
+        let mut file = File::create(&file_path).await?;
 
         while let Some(content) = stream.next().await {
             tokio::io::copy(&mut content?.as_ref(), &mut file).await?;
