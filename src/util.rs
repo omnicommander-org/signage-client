@@ -84,7 +84,7 @@ pub async fn load_json<T: Serialize + DeserializeOwned>(
         file.read_to_end(&mut contents).await?;
         *json = serde_json::from_slice(&contents)?;
     } else {
-        fs::create_dir_all(dir)?;
+        fs::create_dir_all(dir).await?;
         write_json(json, &format!("{dir}/{filename}")).await?;
     }
 
