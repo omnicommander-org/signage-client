@@ -123,15 +123,15 @@ async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box
         .await?;
 
     println!("Received new API key: {}", res.key);
-    config.update_key(res.key.clone()).await?;
+    config.key = Some(res.key.clone());
+    config.write().await?;
     Ok(res)
 }
 
-
 /// Makes the proper request to receive the last time the connected playlist was updated
 async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
-
-
+    println!("Syncing with the server...");
+    println!("Current Config: {:?}", config); // Print the entire config
     let res: Updated = client
         .get(format!("{}/sync/{}", config.url, config.id))
         .header("APIKEY", config.key.clone().unwrap_or_default())
@@ -140,15 +140,13 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
         .json()
         .await?;
 
-
+    println!("Last updated: {:?}", res);
 
     Ok(res.updated)
 }
 
 /// Makes the proper request to receive the list of videos
 async fn receive_videos(client: &Client, config: &Config) -> Result<Vec<Video>, Box<dyn Error>> {
-
-
     let url = format!("{}/recieve-videos/{}", config.url, config.id);
     let standard_api_key = config.key.clone().unwrap_or_default();
 
