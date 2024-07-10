@@ -38,7 +38,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         println!("API Key: {}", api_key);
     }
 
-    /* config.write().await?; */
+    config.write().await?;
 
     // Get the videos if we've never updated
     if data.last_update.is_none() {
