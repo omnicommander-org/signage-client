@@ -21,29 +21,30 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let client = Client::new();
 
     // Load the configs
-
+    println!("Loading configuration...");
     config.load().await?;
-
+    println!("Loading data...");
     data.load().await?;
 
     let _ = wait_for_api(&client, &config).await;
     
     // Get our api key
     if config.key.is_none() {
-     
-        config.key = Some(get_new_key(&client, &config).await?.key);
- 
+        println!("API key is not set. Requesting a new API key...");
+        config.key = Some(get_new_key(&client, &mut config).await?.key);
     }
-
-    /* config.write().await?; */
+    
+    // Print the API key
+    if let Some(api_key) = &config.key {
+        println!("API Key: {}", api_key);
+    }
 
     // Get the videos if we've never updated
     if data.last_update.is_none() {
         let updated = sync(&client, &config).await?;
         update_videos(&client, &config, &mut data, updated).await?;
-         
+        println!("Data Updated: {:?}", updated);    
     }
-
 
     let mut interval = time::interval(Duration::from_secs(30));
     let mut mpv = start_mpv().await?;
