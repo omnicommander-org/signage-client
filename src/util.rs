@@ -58,7 +58,7 @@ impl Video {
         }
 
         println!("Downloaded to: {}", file_path);
-        cleanup_directory(&dir).await?;
+
         Ok(file_path)
     }
 
