@@ -29,11 +29,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let _ = wait_for_api(&client, &config).await;
     
     // Get our api key
-    if config.key.is_none() {
+   
         println!("API key is not set. Requesting a new API key...");
         config.key = Some(get_new_key(&client, &mut config).await?.key);
         config.write().await?; // Ensure the new key is written to signage.json
-    }
+
     
     // Print the API key
     if let Some(api_key) = &config.key {
