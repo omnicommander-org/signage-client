@@ -142,13 +142,30 @@ pub fn capture_screenshot() -> Result<()> {
     let screens = Screen::all()?;
     for screen in screens {
         println!("Display ID: {}", screen.display_info.id);
-       
+        println!("Display Name: {}", screen.display_info.name);
         println!("Display Size: {}x{}", screen.display_info.width, screen.display_info.height);
         // Add other fields as needed
-        let image = screen.capture()?;
-        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
+        
+        match screen.capture() {
+            Ok(image) => {
+                let path = format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id);
+                match image.save(&path) {
+                    Ok(_) => println!("Screenshot saved to {}", path),
+                    Err(e) => eprintln!("Failed to save screenshot: {}", e),
+                }
+            }
+            Err(e) => {
+                eprintln!("Failed to capture screenshot for display {}: {:?}", screen.display_info.id, e);
+            }
+        }
     }
     Ok(())
+}
+
+fn main() {
+    if let Err(e) = capture_screenshot() {
+        eprintln!("Failed to capture screenshot: {:?}", e);
+    }
 }
 
 
