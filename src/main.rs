@@ -124,8 +124,8 @@ async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box
 }
 
 /// Makes the proper request to receive the last time the connected playlist was updated
-async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
-    config.key = Some(get_new_key(&client,&config).await?.key);
+async fn sync(client: &Client, config: &mut Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
+    config.key = Some(get_new_key(&client, &mut config).await?.key);
         config.write().await?; // Ensure the new key is written to signage.json
     let res: Updated = client
         .get(format!("{}/sync/{}", config.url, config.id))
