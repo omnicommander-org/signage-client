@@ -43,7 +43,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if data.last_update.is_none() {
         let updated = sync(&client, &config).await?;
         update_videos(&client, &config, &mut data, updated).await?;
-        println!("Data Updated: {:?}", updated);
+        println!("Data Updated: {:?}", updated);    
     }
 
 
@@ -136,7 +136,7 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
         .json()
         .await?;
 
-    println!("Last updated: {:?}", res.updated);
+    println!("Last updated: {:?}", config.id);
 
     Ok(res.updated)
 }
