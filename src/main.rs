@@ -32,12 +32,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if config.key.is_none() {
         println!("API key is not set. Requesting a new API key...");
         config.key = Some(get_new_key(&client, &mut config).await?.key);
+        config.write().await?; // Ensure the new key is written to signage.json
     }
     
     // Print the API key
     if let Some(api_key) = &config.key {
         println!("API Key: {}", api_key);
     }
+
+    config.write().await?;
 
     // Get the videos if we've never updated
     if data.last_update.is_none() {
@@ -123,6 +126,7 @@ async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box
     config.update_key(res.key.clone()).await?;
     Ok(res)
 }
+
 
 /// Makes the proper request to receive the last time the connected playlist was updated
 async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
