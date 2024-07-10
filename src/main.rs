@@ -30,6 +30,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if config.key.is_none() {
         println!("API key is not set. Requesting a new API key...");
         config.key = Some(get_new_key(&client, &config).await?.key);
+        config.write().await?;
     }
     
     // Print the API key
@@ -37,7 +38,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         println!("API Key: {}", api_key);
     }
 
-    config.write().await?;
+    /* config.write().await?; */
 
     // Get the videos if we've never updated
     if data.last_update.is_none() {
