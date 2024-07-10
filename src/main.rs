@@ -55,12 +55,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let updated = sync(&client, &config).await?;
         // Update videos if the group was updated
                 // Print updated and data.last_update
-        println!("Updated: {:?}", updated);
-        println!("Data last updated: {:?}", data.last_update);
-        if updated > data.last_update {
-            update_videos(&client, &mut config, &mut data, updated).await?;
-            mpv.kill().await?;
-        }
+                if let (Some(updated), Some(last_update)) = (updated, data.last_update) {
+                    println!("Updated: {:?}", updated);
+                    println!("Data last updated: {:?}", last_update);
+                    if updated > last_update {
+                        update_videos(&client, &mut config, &mut data, Some(updated)).await?;
+                        mpv.kill().await?;
+                    }
+                } else if updated.is_some() {
+                    // Handle the case where `data.last_update` is None and `updated` is Some.
+                    println!("Updated: {:?}", updated);
+                    println!("Data last updated: None");
+                    update_videos(&client, &mut config, &mut data, updated).await?;
+                    mpv.kill().await?;
+                } else {
+                    // Handle the case where both `updated` and `data.last_update` are None, if necessary.
+                    println!("No updates available.");
+                }
 
         // Restart mpv if it exits
         match mpv.try_wait() {
