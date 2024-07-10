@@ -44,7 +44,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let updated = sync(&client, &config).await?;
         update_videos(&client, &config, &mut data, updated).await?;
     }
-
+    println!("Data Updated: {}", updated);
+    
     let mut interval = time::interval(Duration::from_secs(30));
     let mut mpv = start_mpv().await?;
 
@@ -123,7 +124,7 @@ async fn get_new_key(client: &Client, config: &Config) -> Result<Apikey, Box<dyn
     Ok(res)
 }
 
-/// Makes the proper request to receive the last time the connected group was updated
+/// Makes the proper request to receive the last time the connected playlist was updated
 async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
     println!("Syncing with the server...");
     let res: Updated = client
