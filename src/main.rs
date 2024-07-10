@@ -44,7 +44,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // Get the videos if we've never updated
     if data.last_update.is_none() {
-        let updated = sync(&client, &config).await?;
+        let updated = sync(&client, &mu config).await?;
         update_videos(&client, &mut config, &mut data, updated).await?;
         println!("Data Updated: {:?}", updated);    
     }
