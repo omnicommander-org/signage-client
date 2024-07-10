@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if config.key.is_none() {
      
         config.key = Some(get_new_key(&client, &config).await?.key);
-        config.write().await?;
+ 
     }
 
     /* config.write().await?; */
@@ -109,6 +109,7 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
 
 /// Makes the proper request to receive an API key
 async fn get_new_key(client: &Client, config: &Config) -> Result<Apikey, Box<dyn Error>> {
+ 
     println!("Requesting a new API key...");
     let res: Apikey = client
         .get(format!("{}/get-new-key/{}", config.url, config.id))
@@ -119,6 +120,7 @@ async fn get_new_key(client: &Client, config: &Config) -> Result<Apikey, Box<dyn
         .await?;
 
     println!("Received new API key: {}", res.key);
+    config.write().await?;
     Ok(res)
 }
 
