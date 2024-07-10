@@ -142,6 +142,7 @@ pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
     match Screen::all() {
         Ok(screens) => {
             for screen in screens {
+                println!("Display Info: {:?}", screen.display_info);
                 match screen.capture() {
                     Ok(image) => {
                         image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
