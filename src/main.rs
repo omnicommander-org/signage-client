@@ -46,7 +46,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         if let (Some(updated), Some(last_update)) = (updated, data.last_update) {
             println!("Updated: {:?}", updated);
             println!("Data last updated: {:?}", last_update);
-            if updated < last_update {
+            if updated > last_update {
                 update_videos(&client, &mut config, &mut data, Some(updated)).await?;
                 mpv.kill().await?;
             }
