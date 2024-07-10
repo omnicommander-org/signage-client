@@ -15,7 +15,6 @@ impl Config {
     pub fn new() -> Self {
         Config::default()
     }
-
     /// Loads `Config` from $HOME/.config/signage/signage.json
     pub async fn load(&mut self) -> Result<(), Box<dyn Error>> {
         load_json(
@@ -30,7 +29,6 @@ impl Config {
     pub async fn write(&self) -> Result<(), Box<dyn Error>> {
         let json_content = serde_json::to_string_pretty(self)?;
         println!("Writing to signage.json: {}", json_content);
-        
         write_json(
             self,
             &format!("{}/.config/signage/signage.json", env::var("HOME")?),
