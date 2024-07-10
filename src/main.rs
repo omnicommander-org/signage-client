@@ -106,7 +106,6 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
         .arg(format!("--image-display-duration={}", image_display_duration))
         .arg(format!("--playlist={}/.local/share/signage/playlist.txt", std::env::var("HOME")?))
         .spawn()?;
-
     println!("mpv player started.");
     Ok(child)
 }
