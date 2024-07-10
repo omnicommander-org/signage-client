@@ -43,9 +43,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if data.last_update.is_none() {
         let updated = sync(&client, &config).await?;
         update_videos(&client, &config, &mut data, updated).await?;
+        println!("Data Updated: {}", updated);
     }
-    println!("Data Updated: {}", updated);
-    
+
+
     let mut interval = time::interval(Duration::from_secs(30));
     let mut mpv = start_mpv().await?;
 
