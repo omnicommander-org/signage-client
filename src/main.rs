@@ -171,7 +171,7 @@ async fn update_videos(
         video.download(client).await?;
 
         // Write the path to the playlist file
-        file.write_all(format!("{}/.local/share/signage/{}.mp4\n", home, video.title).as_bytes()).await?;
+        file.write_all(format!("{}/.local/share/signage/{}.mp4\n", home, video.id).as_bytes()).await?;
     }
 
     Ok(())

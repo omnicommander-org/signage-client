@@ -17,7 +17,7 @@ pub struct Apikey {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Video {
-    pub title: String,
+    pub id: String,
     pub url: String,
 }
 
@@ -33,7 +33,7 @@ impl Video {
         let mut file = tokio::fs::File::create(format!(
             "{}/.local/share/signage/{}.mp4",
             std::env::var("HOME")?,
-            self.title
+            self.id
         ))
         .await?;
 
