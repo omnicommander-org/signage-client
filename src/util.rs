@@ -21,7 +21,7 @@ pub struct Video {
     pub asset_url: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Updated {
     pub updated: Option<DateTime<Utc>>,
 }
