@@ -137,6 +137,7 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
             }
         }
     }
+    Ok(())
 }
 
 pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
