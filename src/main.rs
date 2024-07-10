@@ -45,7 +45,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Get the videos if we've never updated
     if data.last_update.is_none() {
         let updated = sync(&client, &config).await?;
-        update_videos(&client, &config, &mut data, updated).await?;
+        update_videos(&client, &mut config, &mut data, updated).await?;
         println!("Data Updated: {:?}", updated);    
     }
 
@@ -59,7 +59,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
         // Update videos if the group was updated
         if updated > data.last_update {
-            update_videos(&client, &config, &mut data, updated).await?;
+            update_videos(&client, &mut config, &mut data, updated).await?;
             mpv.kill().await?;
         }
 
