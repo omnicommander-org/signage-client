@@ -138,25 +138,17 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
-    match Screen::all() {
-        Ok(screens) => {
-            for screen in screens {
-                println!("Display Info: {:?}", screen.display_info);
-                match screen.capture() {
-                    Ok(image) => {
-                        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
-                    }
-                    Err(e) => eprintln!("Failed to capture screenshot for display {}: {}", screen.display_info.id, e),
-                }
-            }
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("Failed to get screen information: {}", e);
-            Ok(())
-        }
+pub fn capture_screenshot() -> Result<()> {
+    let screens = Screen::all()?;
+    for screen in screens {
+        println!("Display ID: {}", screen.display_info.id);
+        println!("Display Name: {}", screen.display_info.name);
+        println!("Display Size: {}x{}", screen.display_info.width, screen.display_info.height);
+        // Add other fields as needed
+        let image = screen.capture()?;
+        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
     }
+    Ok(())
 }
 
 
