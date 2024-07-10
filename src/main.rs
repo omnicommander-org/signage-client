@@ -192,7 +192,7 @@ async fn update_videos(
     data.videos = receive_videos(client, config).await?;
     data.last_update = updated;
     data.write().await?;
-    
+    println!("Last Updated: {:?}", updated);
     let home = std::env::var("HOME")?;
 
     // Remove the playlist file
