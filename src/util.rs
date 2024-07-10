@@ -21,7 +21,7 @@ pub struct Video {
     pub asset_url: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Updated {
     pub updated: Option<DateTime<Utc>>,
 }
@@ -34,7 +34,7 @@ impl Video {
         let extension = path.extension().and_then(std::ffi::OsStr::to_str).unwrap_or("bin");
         // Clean up the directory after a successful download
         let dir = format!("{}/.local/share/signage", std::env::var("HOME")?);
-        cleanup_directory(&dir).await?;
+        
         
         let file_path = format!(
             "{}/.local/share/signage/{}.{}",
@@ -106,7 +106,6 @@ pub async fn write_json<T: Serialize>(json: &T, path: &str) -> Result<(), Box<dy
 
 /// Cleans up the signage directory by removing files not listed in playlist.txt
 pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
-    println!("Running file cleanup...");
     // Read the playlist.txt file
     let playlist_path = format!("{}/playlist.txt", dir);
     let mut playlist_file = File::open(&playlist_path).await?;
@@ -126,7 +125,6 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
         let path = entry.path();
         if path.is_file() {
             let filename = path.file_name().unwrap().to_string_lossy().to_string();
-            println!("Files in existance: {}", filename);
             // Ignore playlist.txt and data.json
             if filename != "playlist.txt" && filename != "data.json" {
                 // Delete the file if it's not in playlist.txt
@@ -137,14 +135,27 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
             }
         }
     }
+    Ok(())
 }
 
 pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
-    let screens = Screen::all()?;
-    for screen in screens {
-        let image = screen.capture()?;
-        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
+    match Screen::all() {
+        Ok(screens) => {
+            for screen in screens {
+                match screen.capture() {
+                    Ok(image) => {
+                        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
+                    }
+                    Err(e) => eprintln!("Failed to capture screenshot for display {}: {}", screen.display_info.id, e),
+                }
+            }
+            Ok(())
+        }
+        Err(e) => {
+            eprintln!("Failed to get screen information: {}", e);
+            Ok(())
+        }
     }
-    Ok(())
 }
+
 
