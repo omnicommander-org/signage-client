@@ -1,9 +1,8 @@
+use crate::util::{load_json, write_json};
 use serde::{Deserialize, Serialize};
 use std::{boxed::Box, env, error::Error};
-use tokio::fs::{self, File};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct Config {
     pub url: String,
     pub id: String,
@@ -14,34 +13,25 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Self {
-        Config {
-            url: String::new(),
-            id: String::new(),
-            username: String::new(),
-            password: String::new(),
-            key: None,
-        }
+        Config::default()
     }
 
-    /// Loads `Config` from $HOME/.local/share/signage/signage.json
+    /// Loads `Config` from $HOME/config/signage/signage.json
     pub async fn load(&mut self) -> Result<(), Box<dyn Error>> {
-        let path = format!("{}/.local/share/signage/signage.json", env::var("HOME")?);
-        if Path::new(&path).exists() {
-            let mut file = File::open(&path).await?;
-            let mut contents = vec![];
-            file.read_to_end(&mut contents).await?;
-            *self = serde_json::from_slice(&contents)?;
-        }
-
-        Ok(())
+        load_json(
+            self,
+            &format!("{}/.config/signage", env::var("HOME")?),
+            "signage.json",
+        )
+        .await
     }
 
-    /// Writes `Config` to $HOME/.local/share/signage/signage.json
+    /// Writes `Config` to $HOME/config/signage/signage.json
     pub async fn write(&self) -> Result<(), Box<dyn Error>> {
-        let path = format!("{}/.local/share/signage/signage.json", env::var("HOME")?);
-        let mut file = File::create(&path).await?;
-        file.write_all(&serde_json::to_vec_pretty(&self)?).await?;
-
-        Ok(())
+        write_json(
+            self,
+            &format!("{}/.config/signage/signage.json", env::var("HOME")?),
+        )
+        .await
     }
 }
