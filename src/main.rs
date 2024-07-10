@@ -34,13 +34,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         config.key = Some(get_new_key(&client, &config).await?.key);
         config.write().await?;
     }
-    
-    // Print the API key
-    if let Some(api_key) = &config.key {
-      
-    }
 
-    config.write().await?;
+    /* config.write().await?; */
 
     // Get the videos if we've never updated
     if data.last_update.is_none() {
