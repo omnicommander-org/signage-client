@@ -142,7 +142,7 @@ pub fn capture_screenshot() -> Result<()> {
     let screens = Screen::all()?;
     for screen in screens {
         println!("Display ID: {}", screen.display_info.id);
-        println!("Display Name: {}", screen.display_info.name);
+     
         println!("Display Size: {}x{}", screen.display_info.width, screen.display_info.height);
         
         match screen.capture() {
