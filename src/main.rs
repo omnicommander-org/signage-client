@@ -44,7 +44,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // Get the videos if we've never updated
     if data.last_update.is_none() {
-        let updated = sync(&client, &mu config).await?;
+        let updated = sync(&client, &config).await?;
         update_videos(&client, &mut config, &mut data, updated).await?;
         println!("Data Updated: {:?}", updated);    
     }
@@ -54,9 +54,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         interval.tick().await;
         let updated = sync(&client, &config).await?;
         // Update videos if the group was updated
+                // Print updated and data.last_update
         println!("Updated: {:?}", updated);
         println!("Data last updated: {:?}", data.last_update);
-
         if updated > data.last_update {
             update_videos(&client, &mut config, &mut data, updated).await?;
             mpv.kill().await?;
@@ -124,9 +124,7 @@ async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box
 }
 
 /// Makes the proper request to receive the last time the connected playlist was updated
-async fn sync(client: &Client, config: &mut Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
-    config.key = Some(get_new_key(&client, &mut config).await?.key);
-        config.write().await?; // Ensure the new key is written to signage.json
+async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
     let res: Updated = client
         .get(format!("{}/sync/{}", config.url, config.id))
         .header("APIKEY", config.key.clone().unwrap_or_default())
