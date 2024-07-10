@@ -140,12 +140,12 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/* pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
+pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
     let screens = Screen::all()?;
     for screen in screens {
         let image = screen.capture()?;
         image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
     }
     Ok(())
-} */
+}
 
