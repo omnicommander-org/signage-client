@@ -92,6 +92,7 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
 
 /// Starts the mpv player with the proper playlist and flags
 async fn start_mpv() -> Result<Child, Box<dyn Error>> {
+    println!("Starting MPV Player...");
     let image_display_duration = 10;
     let child = Command::new("mpv")
         .arg("--loop-playlist=inf")
@@ -175,13 +176,10 @@ async fn update_videos(
     data.last_update = updated;
     data.write().await?;
     let home = std::env::var("HOME")?;
-
     // Remove the playlist file
     if Path::new(&format!("{home}/.local/share/signage/playlist.txt")).try_exists()? {
-
         tokio::fs::remove_file(format!("{home}/.local/share/signage/playlist.txt")).await?;
     }
-
     // Open the playlist file
     let mut file = tokio::fs::OpenOptions::new()
         .create(true)
