@@ -1,6 +1,8 @@
+use anyhow::Result;
 use chrono::{DateTime, Utc};
 use futures_util::StreamExt;
 use reqwest::Client;
+use screenshots::Screen;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{boxed::Box, error::Error, path::Path};
 use tokio::{
@@ -135,7 +137,14 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
             }
         }
     }
+}
 
+pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
+    let screens = Screen::all()?;
+    for screen in screens {
+        let image = screen.capture()?;
+        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
+    }
     Ok(())
 }
 

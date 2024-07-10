@@ -6,7 +6,7 @@ use std::{boxed::Box, error::Error, path::Path};
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
-use util::{Apikey, Updated, Video};
+use util::{capture_screenshot, Apikey, Updated, Video};
 
 mod config;
 mod data;
@@ -14,6 +14,8 @@ mod util;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    capture_screenshot()?;
+
     let mut config = Config::new();
     let mut data = Data::new();
     let client = Client::new();
