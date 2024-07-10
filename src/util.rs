@@ -141,11 +141,23 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
 }
 
 pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
-    let screens = Screen::all()?;
-    for screen in screens {
-        let image = screen.capture()?;
-        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
+    match Screen::all() {
+        Ok(screens) => {
+            for screen in screens {
+                match screen.capture() {
+                    Ok(image) => {
+                        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
+                    }
+                    Err(e) => eprintln!("Failed to capture screenshot for display {}: {}", screen.display_info.id, e),
+                }
+            }
+            Ok(())
+        }
+        Err(e) => {
+            eprintln!("Failed to get screen information: {}", e);
+            Ok(())
+        }
     }
-    Ok(())
 }
+
 
