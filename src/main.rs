@@ -137,6 +137,7 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
 
 /// Makes the proper request to receive the list of videos
 async fn receive_videos(client: &Client, config: &mut Config) -> Result<Vec<Video>, Box<dyn Error>> {
+    let home = std::env::var("HOME")?;
     let url = format!("{}/recieve-videos/{}", config.url, config.id);
     let standard_api_key = config.key.clone().unwrap_or_default();
 
@@ -175,7 +176,7 @@ async fn update_videos(
     data.videos = receive_videos(client, config).await?;
     data.last_update = updated;
     data.write().await?;
-    let home = std::env::var("HOME")?;
+
 
     // Remove the playlist file
     if Path::new(&format!("{home}/.local/share/signage/playlist.txt")).try_exists()? {
