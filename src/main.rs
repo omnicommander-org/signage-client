@@ -131,6 +131,7 @@ async fn get_new_key(client: &Client, config: &Config) -> Result<Apikey, Box<dyn
 async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
     println!("Syncing with the server...");
     println!("Current Config: {:?}", config); // Print the entire config
+
     let res: Updated = client
         .get(format!("{}/sync/{}", config.url, config.id))
         .header("APIKEY", config.key.clone().unwrap_or_default())
@@ -139,6 +140,7 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
         .json()
         .await?;
 
+    println!("Last updated: {:?}", res);
 
     Ok(res.updated)
 }
