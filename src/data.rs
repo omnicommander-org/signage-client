@@ -9,7 +9,6 @@ pub struct Data {
     pub videos: Vec<Video>,
     pub last_update: Option<DateTime<Utc>>,
 }
-
 impl Data {
     pub fn new() -> Self {
         Data::default()
@@ -24,7 +23,6 @@ impl Data {
         )
         .await
     }
-
     /// Writes `Data` to $HOME/.local/share/signage/data.json
     pub async fn write(&self) -> Result<(), Box<dyn Error>> {
         write_json(
