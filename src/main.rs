@@ -137,7 +137,6 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
 
 /// Makes the proper request to receive the list of videos
 async fn receive_videos(client: &Client, config: &mut Config) -> Result<Vec<Video>, Box<dyn Error>> {
-    let home = std::env::var("HOME")?;
     let url = format!("{}/recieve-videos/{}", config.url, config.id);
     let standard_api_key = config.key.clone().unwrap_or_default();
 
@@ -158,7 +157,6 @@ async fn receive_videos(client: &Client, config: &mut Config) -> Result<Vec<Vide
     let text = response.text().await?;
 
     if status.is_success() {
-        cleanup_directory(&format!("{}/.local/share/signage", home)).await?;
         let res: Vec<Video> = serde_json::from_str(&text)?;
         Ok(res)
     } else {
@@ -176,7 +174,7 @@ async fn update_videos(
     data.videos = receive_videos(client, config).await?;
     data.last_update = updated;
     data.write().await?;
-
+    let home = std::env::var("HOME")?;
 
     // Remove the playlist file
     if Path::new(&format!("{home}/.local/share/signage/playlist.txt")).try_exists()? {
@@ -200,7 +198,7 @@ async fn update_videos(
         // Write the path to the playlist file
         file.write_all(format!("{}\n", file_path).as_bytes()).await?;
     }
-    
+    cleanup_directory(&format!("{}/.local/share/signage", home)).await?;
     Ok(())
 }
 
