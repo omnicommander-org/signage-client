@@ -138,16 +138,32 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
+pub fn capture_screenshot() -> Result<()> {
     let screens = Screen::all()?;
-
     for screen in screens {
-        let image = screen.capture()?;
-        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
+        println!("Display ID: {}", screen.display_info.id);
+        println!("Display Name: {}", screen.display_info.name);
+        println!("Display Size: {}x{}", screen.display_info.width, screen.display_info.height);
+        
+        match screen.capture() {
+            Ok(image) => {
+                let path = format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id);
+                match image.save(&path) {
+                    Ok(_) => println!("Screenshot saved to {}", path),
+                    Err(e) => eprintln!("Failed to save screenshot: {}", e),
+                }
+            }
+            Err(e) => {
+                eprintln!("Failed to capture screenshot for display {}: {:?}", screen.display_info.id, e);
+                if let Some(xcb_error) = e.downcast_ref::<xcb::base::GenericError>() {
+                    eprintln!("XCB Error: {:?}", xcb_error);
+                }
+            }
+        }
     }
-
     Ok(())
 }
+
 
 
 
