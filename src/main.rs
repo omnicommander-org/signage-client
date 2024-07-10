@@ -48,16 +48,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
         update_videos(&client, &mut config, &mut data, updated).await?;
         println!("Data Updated: {:?}", updated);    
     }
-
     let mut interval = time::interval(Duration::from_secs(30));
     let mut mpv = start_mpv().await?;
-
     loop {
         interval.tick().await;
-
         let updated = sync(&client, &config).await?;
-
         // Update videos if the group was updated
+                // Print updated and data.last_update
+                println!("Updated: {:?}", updated);
+                println!("Data last updated: {:?}", data.last_update);
         if updated > data.last_update {
             update_videos(&client, &mut config, &mut data, updated).await?;
             mpv.kill().await?;
@@ -74,7 +73,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 /// Loops until we get a response from the API to make sure our network is online
 async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn Error>> {
- 
     let mut interval = time::interval(Duration::from_secs(1));
     loop {
         let res = client.get(format!("{}/health", config.url)).send().await;
@@ -90,14 +88,11 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
         }
         interval.tick().await;
     }
-
-  
     Ok(true)
 }
 
 /// Starts the mpv player with the proper playlist and flags
 async fn start_mpv() -> Result<Child, Box<dyn Error>> {
-
     let image_display_duration = 10;
     let child = Command::new("mpv")
         .arg("--loop-playlist=inf")
@@ -130,8 +125,6 @@ async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box
 
 /// Makes the proper request to receive the last time the connected playlist was updated
 async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
-    println!("Syncing with the server...");
-    println!("Current Config: {:?}", config); // Print the entire config
     let res: Updated = client
         .get(format!("{}/sync/{}", config.url, config.id))
         .header("APIKEY", config.key.clone().unwrap_or_default())
@@ -139,9 +132,7 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
         .await?
         .json()
         .await?;
-
     println!("Last updated: {:?}", res);
-
     Ok(res.updated)
 }
 
