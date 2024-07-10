@@ -146,7 +146,7 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
 }
 
 /// Makes the proper request to receive the list of videos
-async fn receive_videos(client: &Client, config: &mut &Config) -> Result<Vec<Video>, Box<dyn Error>> {
+async fn receive_videos(client: &Client, config: &mut Config) -> Result<Vec<Video>, Box<dyn Error>> {
     let url = format!("{}/recieve-videos/{}", config.url, config.id);
     let standard_api_key = config.key.clone().unwrap_or_default();
 
