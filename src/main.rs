@@ -117,9 +117,6 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
         .await?
         .json()
         .await?;
-
-    println!("{:?}", res.updated);
-
     Ok(res.updated)
 }
 
@@ -132,8 +129,6 @@ async fn recieve_videos(client: &Client, config: &Config) -> Result<Vec<Video>, 
         .await?
         .json()
         .await?;
-
-    println!("{res:?}");
     Ok(res)
 }
 
