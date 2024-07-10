@@ -155,9 +155,7 @@ pub fn capture_screenshot() -> Result<()> {
             }
             Err(e) => {
                 eprintln!("Failed to capture screenshot for display {}: {:?}", screen.display_info.id, e);
-                if let Some(xcb_error) = e.downcast_ref::<xcb::base::GenericError>() {
-                    eprintln!("XCB Error: {:?}", xcb_error);
-                }
+               
             }
         }
     }
