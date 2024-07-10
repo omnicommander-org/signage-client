@@ -34,7 +34,7 @@ impl Video {
         let extension = path.extension().and_then(std::ffi::OsStr::to_str).unwrap_or("bin");
         // Clean up the directory after a successful download
         let dir = format!("{}/.local/share/signage", std::env::var("HOME")?);
-        cleanup_directory(&dir).await?;
+        
         
         let file_path = format!(
             "{}/.local/share/signage/{}.{}",
@@ -58,7 +58,7 @@ impl Video {
         }
 
         println!("Downloaded to: {}", file_path);
-
+        cleanup_directory(&dir).await?;
         Ok(file_path)
     }
 
