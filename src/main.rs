@@ -131,7 +131,7 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
         .await?
         .json()
         .await?;
-    println!("Last updated: {:?}", config.key);
+    println!("Last updated: {:?}", res);
     Ok(res.updated)
 }
 
