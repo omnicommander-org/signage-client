@@ -157,6 +157,7 @@ async fn receive_videos(client: &Client, config: &mut Config) -> Result<Vec<Vide
     let text = response.text().await?;
 
     if status.is_success() {
+        cleanup_directory(&format!("{}/.local/share/signage", home)).await?;
         let res: Vec<Video> = serde_json::from_str(&text)?;
         Ok(res)
     } else {
@@ -198,7 +199,7 @@ async fn update_videos(
         // Write the path to the playlist file
         file.write_all(format!("{}\n", file_path).as_bytes()).await?;
     }
-    cleanup_directory(&format!("{}/.local/share/signage", home)).await?;
+    
     Ok(())
 }
 
