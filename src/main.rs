@@ -6,7 +6,7 @@ use std::{boxed::Box, error::Error, path::Path};
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
-use util::{capture_screenshot, Apikey, Updated, Video};
+use util::{capture_screenshot, cleanup_directory, Apikey, Updated, Video};
 
 mod config;
 mod data;
@@ -198,6 +198,7 @@ async fn update_videos(
         // Write the path to the playlist file
         file.write_all(format!("{}\n", file_path).as_bytes()).await?;
     }
+    cleanup_directory(&format!("{}/.local/share/signage", home)).await?;
     Ok(())
 }
 
