@@ -177,7 +177,7 @@ async fn receive_videos(client: &Client, config: &mut Config) -> Result<Vec<Vide
 /// Receives and downloads videos and writes to the playlist file
 async fn update_videos(
     client: &Client,
-    config: &mut &Config,
+    config: &mut Config,
     data: &mut Data,
     updated: Option<DateTime<Utc>>,
 ) -> Result<(), Box<dyn Error>> {
