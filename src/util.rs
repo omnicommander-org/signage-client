@@ -150,7 +150,7 @@ pub fn capture_screenshot() -> Result<()> {
                 let path = format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id);
                 match image.save(&path) {
                     Ok(_) => println!("Screenshot saved to {}", path),
-                    Err(e) => eprintln!("Failed to save screenshot: {}", e),
+                    Err(e) => eprintln!("Failed to save screenshot: {:?}", e),
                 }
             }
             Err(e) => {
