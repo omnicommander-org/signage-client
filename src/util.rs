@@ -142,7 +142,6 @@ pub fn capture_screenshot() -> Result<()> {
     let screens = Screen::all()?;
     for screen in screens {
         println!("SCREEN: {:?}", screen);
-     
         println!("Display Size: {}x{}", screen.display_info.width, screen.display_info.height);
         
         match screen.capture() {
@@ -155,12 +154,15 @@ pub fn capture_screenshot() -> Result<()> {
             }
             Err(e) => {
                 eprintln!("Failed to capture screenshot for display {}: {:?}", screen.display_info.id, e);
-               
+                if let Some(xcb_error) = e.downcast_ref::<xcb::base::GenericError>() {
+                    eprintln!("XCB Error Code: {}", xcb_error.error_code());
+                }
             }
         }
     }
     Ok(())
 }
+
 
 
 
