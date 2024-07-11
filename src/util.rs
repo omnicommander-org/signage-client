@@ -141,7 +141,7 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
 pub fn capture_screenshot() -> Result<()> {
     let screens = Screen::all()?;
     for screen in screens {
-        println!("SCREEN: {}", screen);
+        println!("SCREEN: {:?}", screen);
      
         println!("Display Size: {}x{}", screen.display_info.width, screen.display_info.height);
         
