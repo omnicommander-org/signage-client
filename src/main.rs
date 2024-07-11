@@ -1,14 +1,12 @@
 use chrono::{DateTime, Utc};
 use config::Config;
 use data::Data;
-use image::{ImageBuffer, RgbaImage};
 use reqwest::{Client, StatusCode};
-use screenshots::Screen;
-use std::{boxed::Box, error::Error, path::Path, thread::sleep};
+use std::{boxed::Box, error::Error, path::Path};
+use tokio::io::AsyncWriteExt;
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
-use tokio::io::AsyncWriteExt;
-use util::{Apikey, Updated, Video};
+use util::{Apikey, Updated, Video, capture_screenshot};
 
 mod config;
 mod data;
@@ -25,7 +23,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     data.load().await?;
 
     let _ = wait_for_api(&client, &config).await;
-    
+
     // Get our api key
     if config.key.is_none() {
         config.key = Some(get_new_key(&client, &config).await?.key);
@@ -38,11 +36,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
         update_videos(&client, &config, &mut data, updated).await?;
     }
 
-    let mut interval = time::interval(Duration::from_secs(30));
+    let mut interval = time::interval(Duration::from_secs(300));
     let mut mpv = start_mpv().await?;
 
     loop {
         interval.tick().await;
+
+        capture_screenshot()?;
 
         let updated = sync(&client, &config).await?;
 
@@ -71,7 +71,7 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
                 StatusCode::OK => break,
                 StatusCode::INTERNAL_SERVER_ERROR => {
                     time::interval(Duration::from_secs(120)).tick().await;
-                },
+                }
                 _ => (),
             }
         }
@@ -88,7 +88,10 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
         .arg("--loop-playlist=inf")
         .arg("--volume=-1")
         .arg("--no-terminal")
-        .arg(format!("--playlist={}/.local/share/signage/playlist.txt", std::env::var("HOME")?))
+        .arg(format!(
+            "--playlist={}/.local/share/signage/playlist.txt",
+            std::env::var("HOME")?
+        ))
         .spawn()?;
 
     Ok(child)
@@ -147,7 +150,7 @@ async fn update_videos(
     data.videos = recieve_videos(client, config).await?;
     data.last_update = updated;
     data.write().await?;
-    
+
     let home = std::env::var("HOME")?;
 
     // Remove the playlist file
@@ -171,15 +174,9 @@ async fn update_videos(
         video.download(client).await?;
 
         // Write the path to the playlist file
-        file.write_all(format!("{}/.local/share/signage/{}.mp4\n", home, video.title).as_bytes()).await?;
+        file.write_all(format!("{}/.local/share/signage/{}.mp4\n", home, video.title).as_bytes())
+            .await?;
     }
-
-    fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
-        
-        println!("Screenshot captured!");
-    Ok(())
-    }
-
 
     Ok(())
 }
