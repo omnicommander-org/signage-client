@@ -4,7 +4,7 @@ use futures_util::StreamExt;
 use reqwest::Client;
 use screenshots::Screen;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::{boxed::Box, error::Error, path::Path};
+use std::{boxed::Box, error::Error, fs, path::Path};
 use tokio::{
     fs::{self, File},
     io::{AsyncReadExt, AsyncWriteExt},
@@ -103,7 +103,6 @@ pub async fn write_json<T: Serialize>(json: &T, path: &str) -> Result<(), Box<dy
 
     Ok(())
 }
-
 /// Cleans up the signage directory by removing files not listed in playlist.txt
 pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
     // Read the playlist.txt file
@@ -137,25 +136,27 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
     }
     Ok(())
 }
+fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
+    let screens = Screen::all().unwrap();
+    let screen = &screens[0]; // Assuming you want to capture the first screen
 
-pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
-    match Screen::all() {
-        Ok(screens) => {
-            for screen in screens {
-                match screen.capture() {
-                    Ok(image) => {
-                        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
-                    }
-                    Err(e) => eprintln!("Failed to capture screenshot for display {}: {}", screen.display_info.id, e),
-                }
-            }
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("Failed to get screen information: {}", e);
-            Ok(())
-        }
+    loop {
+        // Capture the screen
+        let image = screen.capture().unwrap();
+        let width = image.width();
+        let height = image.height();
+        let buffer = image.to_vec(); // Get the raw pixel data as Vec<u8>
+
+        // Convert the buffer to an image
+        let img_buffer: RgbaImage = ImageBuffer::from_raw(width as u32, height as u32, buffer).unwrap();
+
+        // Save the image
+        let path = Path::new("/home/pi/screenshot/pi_screenshot.png");
+        img_buffer.save(path)?;
+
+        println!("Screenshot saved successfully.");
+
+        // Sleep for 3 minutes
+        sleep(Duration::from_secs(180));
     }
 }
-
-
