@@ -2,15 +2,11 @@ use chrono::{DateTime, Utc};
 use config::Config;
 use data::Data;
 use reqwest::{Client, StatusCode};
-use screenshots::Screen;
-use serde_json::json;
-use std::{boxed::Box, error::Error, path::Path, time::Duration};
+use std::{boxed::Box, error::Error, path::Path};
 use tokio::process::{Child, Command};
-use tokio::time;
+use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
-use tokio::net::UnixStream;
-use tokio_tungstenite::{accept_async, tungstenite::protocol::Message};
-use util::{Apikey, Updated, Video};
+use util::{capture_screenshot, cleanup_directory, Apikey, Updated, Video};
 
 mod config;
 mod data;
@@ -31,11 +27,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     data.load().await?;
 
     let _ = wait_for_api(&client, &config).await;
-    
-    // Get our api key
-    if config.key.is_none() {
-        config.key = Some(get_new_key(&client, &config).await?.key);
-    }
+       
+    println!("API key is not set. Requesting a new API key...");
+    config.key = Some(get_new_key(&client, &mut config).await?.key);
     config.write().await?;
 
     // Get the videos if we've never updated
@@ -44,20 +38,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         update_videos(&client, &mut config, &mut data, updated).await?;
         println!("Data Updated: {:?}", updated);    
     }
-
     let mut interval = time::interval(Duration::from_secs(30));
     let mut mpv = start_mpv().await?;
-
-    // Spawn the monitor task
-    tokio::spawn(async {
-        if let Err(e) = monitor_mpv_status().await {
-            eprintln!("Error monitoring MPV status: {}", e);
-        }
-    });
-
     loop {
         interval.tick().await;
-
         let updated = sync(&client, &config).await?;
         if let (Some(updated), Some(last_update)) = (updated, data.last_update) {
             println!("Updated: {:?}", updated);
@@ -97,7 +81,7 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
                 StatusCode::INTERNAL_SERVER_ERROR => {
                     println!("Server error. Retrying in 2 minutes...");
                     time::interval(Duration::from_secs(120)).tick().await;
-                }
+                },
                 _ => (),
             }
         }
@@ -113,8 +97,8 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
         .arg("--loop-playlist=inf")
         .arg("--volume=-1")
         .arg("--no-terminal")
-        .arg("--idle=yes")
-        .arg("--input-ipc-server=/tmp/mpvsocket")
+        .arg("--fullscreen")
+        .arg(format!("--image-display-duration={}", image_display_duration))
         .arg(format!("--playlist={}/.local/share/signage/playlist.txt", std::env::var("HOME")?))
         .spawn()?;
 
@@ -190,7 +174,6 @@ async fn update_videos(
     data.videos = receive_videos(client, config).await?;
     data.last_update = updated;
     data.write().await?;
-    
     let home = std::env::var("HOME")?;
 
     // Remove the playlist file
@@ -213,45 +196,10 @@ async fn update_videos(
         // Download the video and get the file path
         let file_path = video.download(client).await?;
         // Write the path to the playlist file
-        file.write_all(format!("{}/.local/share/signage/{}.mp4\n", home, video.title).as_bytes()).await?;
+        file.write_all(format!("{}\n", file_path).as_bytes()).await?;
     }
-
-    fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
-        
-        println!("Screenshot captured!");
-    Ok(())
-    }
-}
-
-// Function to monitor MPV status every 10 minutes
-async fn monitor_mpv_status() -> Result<(), Box<dyn Error>> {
-    let mut interval = time::interval(Duration::from_secs(600));
-    loop {
-        interval.tick().await;
-
-        match UnixStream::connect("/tmp/mpvsocket").await {
-            Ok(mut stream) => {
-                let command = json!({"command": ["get_property", "idle"]}).to_string();
-                stream.write_all(command.as_bytes()).await?;
-                let mut buffer = Vec::new();
-                stream.read_to_end(&mut buffer).await?;
-                let status = String::from_utf8_lossy(&buffer).to_string();
-                println!("MPV status: {}", status);
-                if !status.contains("\"idle\":false") {
-                    println!("MPV is not playing. Restarting...");
-                    restart_mpv().await?;
-                }
-            },
-            Err(e) => {
-                println!("Failed to connect to MPV: {}", e);
-                restart_mpv().await?;
-            }
-        }
-    }
-}
-
-async fn restart_mpv() -> Result<(), Box<dyn Error>> {
-    // Add your logic to restart MPV
-    let mut mpv = start_mpv().await?;
+    cleanup_directory(&format!("{}/.local/share/signage", home)).await?;
     Ok(())
 }
+
+
