@@ -1,9 +1,3 @@
-cat << EOL
-
-   _ \   \  |   \ | _ _| \ \   / _ _|   __| _ _|   _ \   \ |
-  (   | |\/ |  .  |   |   \ \ /    |  \__ \   |   (   | .  |
- \___/ _|  _| _|\_| ___|   \_/   ___| ____/ ___| \___/ _|\_|
-
 EOL
 
 echo "installing..."
@@ -12,15 +6,48 @@ echo "installing..."
 curl -O -sSf https://$OV_SOURCE/signaged
 curl -O -sSf https://$OV_SOURCE/signaged.service
 curl -O -sSf https://$OV_SOURCE/signage.json
-curl -O -sSf https://$OV_SOURCE/upgrade.sh
+#curl -O -sSf https://$OV_SOURCE/upgrade.sh
 
-mv signaged /usr/bin/
+# Check if files were downloaded
+if [ ! -f "signaged" ] || [ ! -f "signaged.service" ] || [ ! -f "signage.json" ]; then
+    echo "Error: One or more files failed to download."
+    exit 1
+fi
 
-mkdir -p $HOME/.config/signage
-mv signage.json $HOME/.config/signage/
+# Move the signaged binary
+if mv signaged /usr/bin/; then
+    echo "Moved signaged to /usr/bin/"
+else
+    echo "Failed to move signaged to /usr/bin/"
+    exit 1
+fi
 
-mv signaged.service /etc/systemd/system
-systemctl enable signaged
-systemctl start signaged
+# Create the configuration directory
+if mkdir -p ".config/signage"; then
+    echo "Created directory .config/signage"
+else
+    echo "Failed to create directory $HOME/.config/signage"
+    exit 1
+fi
+
+# Move the configuration file
+if mv signage.json ".config/signage/"; then
+    echo "Moved signage.json to .config/signage/"
+else
+    echo "Failed to move signage.json to .config/signage/"
+    exit 1
+fi
+
+# Move the service file and enable the service
+if mv signaged.service /etc/systemd/system/; then
+    echo "Moved signaged.service to /etc/systemd/system/"
+    systemctl daemon-reload
+    systemctl enable signaged
+    systemctl start signaged
+    echo "Service signaged enabled and started"
+else
+    echo "Failed to move signaged.service to /etc/systemd/system/"
+    exit 1
+fi
 
 echo "done!"
