@@ -9,6 +9,8 @@ use tokio::{
     fs::{self, File},
     io::{AsyncReadExt, AsyncWriteExt},
 };
+use std::env;
+use std::process::Command;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Apikey {
