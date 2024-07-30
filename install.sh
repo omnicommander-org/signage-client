@@ -23,16 +23,16 @@ else
 fi
 
 # Create the configuration directory
-if mkdir -p ".config/signage"; then
-    echo "Created directory .config/signage"
+if mkdir -p "$HOME/.config/signage"; then
+    echo "Created directory $HOME/.config/signage"
 else
     echo "Failed to create directory $HOME/.config/signage"
     exit 1
 fi
 
 # Move the configuration file
-if mv signage.json ".config/signage/"; then
-    echo "Moved signage.json to .config/signage/"
+if mv signage.json "$HOME/.config/signage/"; then
+    echo "Moved signage.json to $HOME/.config/signage/"
 else
     echo "Failed to move signage.json to .config/signage/"
     exit 1
@@ -42,8 +42,8 @@ fi
 if mv signaged.service /etc/systemd/system/; then
     echo "Moved signaged.service to /etc/systemd/system/"
     systemctl daemon-reload
-    systemctl enable signaged
-    systemctl start signaged
+    systemctl enable signaged.service
+    systemctl start signaged.service
     echo "Service signaged enabled and started"
 else
     echo "Failed to move signaged.service to /etc/systemd/system/"
