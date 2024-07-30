@@ -16,7 +16,7 @@ fi
 
 # Move the signaged binary
 if mv signaged /usr/bin/; then
-    echo "Moved signaged to /usr/bin/"
+    echo $HOME
 else
     echo "Failed to move signaged to /usr/bin/"
     exit 1
