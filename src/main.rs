@@ -6,7 +6,7 @@ use std::{boxed::Box, error::Error, path::Path};
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
-use util::{, cleanup_directory, Apikey, Updated, Video};
+use util::{set_display, cleanup_directory, Apikey, Updated, Video};
 
 mod config;
 mod data;
