@@ -1,3 +1,5 @@
+export OV_SOURCE="signage-client-install.s3.amazonaws.com"
+
 EOL
 
 echo "installing..."
