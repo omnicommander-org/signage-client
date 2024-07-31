@@ -101,7 +101,30 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
 }
 
 async fn start_mpv() -> Result<Child, Box<dyn Error>> {
-    println!("--playlist={}/.local/share/signage/playlist.txt", std::env::var("HOME")?);
+    let home_dir = std::env::var("HOME")?;
+    let playlist_path = format!("{}/.local/share/signage/playlist.txt", home_dir);
+    let playlist_dir = format!("{}/.local/share/signage", home_dir);
+
+    // Ensure the playlist and directory exist
+    if !Path::new(&playlist_path).exists() {
+        eprintln!("Playlist file does not exist: {}", playlist_path);
+        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::NotFound, "Playlist file not found")));
+    }
+
+    if !Path::new(&playlist_dir).exists() {
+        eprintln!("Playlist directory does not exist: {}", playlist_dir);
+        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::NotFound, "Playlist directory not found")));
+    }
+
+    // Set read permissions for all users on the playlist directory
+    Command::new("chmod")
+        .arg("-R")
+        .arg("a+r")
+        .arg(&playlist_dir)
+        .spawn()?
+        .await?;
+
+    println!("--playlist={}", playlist_path);
     let image_display_duration = 10;
     let child = Command::new("mpv")
         .arg("--loop-playlist=inf")
@@ -109,7 +132,7 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
         .arg("--no-terminal")
         .arg("--fullscreen")
         .arg(format!("--image-display-duration={}", image_display_duration))
-        .arg(format!("--playlist={}/.local/share/signage/playlist.txt", std::env::var("HOME")?))
+        .arg(format!("--playlist={}", playlist_path))
         .spawn()?;
 
     Ok(child)
