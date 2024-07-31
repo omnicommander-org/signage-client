@@ -9,6 +9,7 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
 };
 use tokio::process::Command;
+
 use std::env;
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -180,13 +181,5 @@ pub fn set_display() {
         Err(e) => println!("Couldn't read DISPLAY: {}", e),
     }
 
-    // Run a command that requires the DISPLAY environment variable
-    let output = Command::new("sh")
-        .arg("-c")
-        .arg("echo $DISPLAY")
-        .output()
-        .expect("Failed to execute command");
-
-    // Print the output of the command
-    println!("Output: {}", String::from_utf8_lossy(&output.stdout));
+   
 }
