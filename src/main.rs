@@ -8,6 +8,7 @@ use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
 use util::{set_display, cleanup_directory, Apikey, Updated, Video};
 use reporting::{collect_and_write_metrics, send_metrics};
+use tokio::process::{Child, Command};
 
 mod reporting;
 mod config;
