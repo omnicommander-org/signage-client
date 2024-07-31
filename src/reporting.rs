@@ -1,50 +1,37 @@
-// reporting.rs
-
+use serde::Serialize;
 use std::fs::File;
 use std::io::Write;
-use std::process::Command;
-use serde::Serialize;
-use std::thread;
-use std::time::Duration;
 use reqwest::blocking::Client;
 use reqwest::header::{CONTENT_TYPE, HeaderValue, HeaderMap};
 use uuid::Uuid;
+use crate::util::run_command;
 
-pub fn run_command(command: &str, args: &[&str]) -> String {
-    let output = Command::new(command)
-        .args(args)
-        .output()
-        .expect("Failed to execute command");
-
-    String::from_utf8_lossy(&output.stdout).trim().to_string()
+pub async fn temp() -> String {
+    run_command("vcgencmd", &["measure_temp"]).await.unwrap_or_default()
 }
 
-pub fn temp() -> String {
-    run_command("vcgencmd", &["measure_temp"])
+pub async fn cpuusage() -> String {
+    run_command("sh", &["-c", "top -bn1 | grep 'Cpu(s)'"]).await.unwrap_or_default()
 }
 
-pub fn cpuusage() -> String {
-    run_command("sh", &["-c", "top -bn1 | grep 'Cpu(s)'"])
+pub async fn memory() -> String {
+    run_command("free", &["-h"]).await.unwrap_or_default()
 }
 
-pub fn memory() -> String {
-    run_command("free", &["-h"])
+pub async fn diskusage() -> String {
+    run_command("df", &["-h"]).await.unwrap_or_default()
 }
 
-pub fn diskusage() -> String {
-    run_command("df", &["-h"])
+pub async fn swapusage() -> String {
+    run_command("swapon", &["--summary"]).await.unwrap_or_default()
 }
 
-pub fn swapusage() -> String {
-    run_command("swapon", &["--summary"])
+pub async fn uptime() -> String {
+    run_command("uptime", &[]).await.unwrap_or_default()
 }
 
-pub fn uptime() -> String {
-    run_command("uptime", &[])
-}
-
-pub fn mpvstatus() -> String {
-    let output = run_command("sh", &["-c", "ps aux | grep -v grep | grep mpv"]);
+pub async fn mpvstatus() -> String {
+    let output = run_command("sh", &["-c", "ps aux | grep -v grep | grep mpv"]).await.unwrap_or_default();
     if output.is_empty() {
         "MPV is not running".to_string()
     } else {
@@ -64,16 +51,16 @@ pub struct Metrics {
     mpvstatus: String,
 }
 
-pub fn collect_and_write_metrics(client_id: &str) -> Metrics {
+pub async fn collect_and_write_metrics(client_id: &str) -> Metrics {
     let metrics = Metrics {
         client_id: client_id.to_string(),
-        temp: temp(),
-        cpuusage: cpuusage(),
-        memory: memory(),
-        diskusage: diskusage(),
-        swapusage: swapusage(),
-        uptime: uptime(),
-        mpvstatus: mpvstatus(),
+        temp: temp().await,
+        cpuusage: cpuusage().await,
+        memory: memory().await,
+        diskusage: diskusage().await,
+        swapusage: swapusage().await,
+        uptime: uptime().await,
+        mpvstatus: mpvstatus().await,
     };
 
     // Serialize metrics to JSON

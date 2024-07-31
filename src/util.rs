@@ -99,6 +99,16 @@ pub async fn load_json<T: Serialize + DeserializeOwned>(
     Ok(())
 }
 
+
+pub async fn run_command(command: &str, args: &[&str]) -> Result<String, Box<dyn std::error::Error>> {
+    let output = Command::new(command)
+        .args(args)
+        .output()
+        .await?;
+    
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
 /// Writes json from `T` into `path`
 pub async fn write_json<T: Serialize>(json: &T, path: &str) -> Result<(), Box<dyn Error>> {
     let mut file = File::create(path).await?;
