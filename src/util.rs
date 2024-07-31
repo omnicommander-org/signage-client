@@ -9,9 +9,8 @@ use tokio::{
     fs::{self, File},
     io::{AsyncReadExt, AsyncWriteExt},
 };
-use std::env;
-use std::process::Command;
-
+use tokio::process::Command;
+use std::process::Output;
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Apikey {
     pub key: String,
@@ -160,6 +159,7 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
     }
 } */
 
+
 pub fn set_display() {
     // Set the DISPLAY environment variable for the current process
     env::set_var("DISPLAY", ":0");
@@ -180,4 +180,3 @@ pub fn set_display() {
     // Print the output of the command
     println!("Output: {}", String::from_utf8_lossy(&output.stdout));
 }
-

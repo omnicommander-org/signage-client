@@ -7,14 +7,15 @@ use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
 use util::{set_display, cleanup_directory, Apikey, Updated, Video};
+use reporting::{collect_and_write_metrics, send_metrics};
 
+mod reporting;
 mod config;
 mod data;
 mod util;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-   /*  capture_screenshot()?; */
     set_display();
     let mut config = Config::new();
     let mut data = Data::new();
@@ -38,39 +39,48 @@ async fn main() -> Result<(), Box<dyn Error>> {
         update_videos(&client, &mut config, &mut data, updated).await?;
         println!("Data Updated: {:?}", updated);    
     }
-    let mut interval = time::interval(Duration::from_secs(30));
-    let mut mpv = start_mpv().await?;
-    loop {
-        interval.tick().await;
-        let updated = sync(&client, &config).await?;
-        if let (Some(updated), Some(last_update)) = (updated, data.last_update) {
-            println!("Updated: {:?}", updated);
-            println!("Data last updated: {:?}", last_update);
-            if updated > last_update {
-                update_videos(&client, &mut config, &mut data, Some(updated)).await?;
-                mpv.kill().await?;
-            }
-        } else if updated.is_some() {
-            // Handle the case where `data.last_update` is None and `updated` is Some.
-            println!("Updated: {:?}", updated);
-            println!("Data last updated: None");
-            update_videos(&client, &mut config, &mut data, updated).await?;
-            mpv.kill().await?;
-        } else {
-            // Handle the case where both `updated` and `data.last_update` are None, if necessary.
-            println!("No updates available.");
-        }
 
-        // Restart mpv if it exits
-        match mpv.try_wait() {
-            Ok(Some(_)) => mpv = start_mpv().await?,
-            Ok(None) => (),
-            Err(error) => eprintln!("Error waiting for mpv process: {error}"),
+    let mut interval = time::interval(Duration::from_secs(30));
+    let mut metrics_interval = time::interval(Duration::from_secs(60));
+    let mut mpv = start_mpv().await?;
+
+    loop {
+        tokio::select! {
+            _ = interval.tick() => {
+                let updated = sync(&client, &config).await?;
+                if let (Some(updated), Some(last_update)) = (updated, data.last_update) {
+                    println!("Updated: {:?}", updated);
+                    println!("Data last updated: {:?}", last_update);
+                    if updated > last_update {
+                        update_videos(&client, &mut config, &mut data, Some(updated)).await?;
+                        mpv.kill().await?;
+                    }
+                } else if updated.is_some() {
+                    // Handle the case where `data.last_update` is None and `updated` is Some.
+                    println!("Updated: {:?}", updated);
+                    println!("Data last updated: None");
+                    update_videos(&client, &mut config, &mut data, updated).await?;
+                    mpv.kill().await?;
+                } else {
+                    // Handle the case where both `updated` and `data.last_update` are None, if necessary.
+                    println!("No updates available.");
+                }
+
+                // Restart mpv if it exits
+                match mpv.try_wait() {
+                    Ok(Some(_)) => mpv = start_mpv().await?,
+                    Ok(None) => (),
+                    Err(error) => eprintln!("Error waiting for mpv process: {error}"),
+                }
+            }
+            _ = metrics_interval.tick() => {
+                let metrics = collect_and_write_metrics(&config.id).await;
+                send_metrics(&config.id, &metrics, &config.key.as_ref().unwrap_or(&String::new()));
+            }
         }
     }
 }
 
-/// Loops until we get a response from the API to make sure our network is online
 async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn Error>> {
     let mut interval = time::interval(Duration::from_secs(1));
     loop {
@@ -90,7 +100,6 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
     Ok(true)
 }
 
-/// Starts the mpv player with the proper playlist and flags
 async fn start_mpv() -> Result<Child, Box<dyn Error>> {
     let image_display_duration = 10;
     let child = Command::new("mpv")
@@ -105,7 +114,6 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
     Ok(child)
 }
 
-/// Makes the proper request to receive an API key
 async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box<dyn Error>> {
     println!("Requesting a new API key...");
     let res: Apikey = client
@@ -122,7 +130,6 @@ async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box
     Ok(res)
 }
 
-/// Makes the proper request to receive the last time the connected playlist was updated
 async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
     let res: Updated = client
         .get(format!("{}/sync/{}", config.url, config.id))
@@ -135,7 +142,6 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
     Ok(res.updated)
 }
 
-/// Makes the proper request to receive the list of videos
 async fn receive_videos(client: &Client, config: &mut Config) -> Result<Vec<Video>, Box<dyn Error>> {
     let url = format!("{}/recieve-videos/{}", config.url, config.id);
     let standard_api_key = config.key.clone().unwrap_or_default();
@@ -164,7 +170,6 @@ async fn receive_videos(client: &Client, config: &mut Config) -> Result<Vec<Vide
     }
 }
 
-/// Receives and downloads videos and writes to the playlist file
 async fn update_videos(
     client: &Client,
     config: &mut Config,
@@ -178,7 +183,6 @@ async fn update_videos(
 
     // Remove the playlist file
     if Path::new(&format!("{home}/.local/share/signage/playlist.txt")).try_exists()? {
-
         tokio::fs::remove_file(format!("{home}/.local/share/signage/playlist.txt")).await?;
     }
 
@@ -201,5 +205,3 @@ async fn update_videos(
     cleanup_directory(&format!("{}/.local/share/signage", home)).await?;
     Ok(())
 }
-
-
