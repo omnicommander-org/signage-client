@@ -11,6 +11,8 @@ use tokio::{
 };
 use tokio::process::Command;
 use std::process::Output;
+use std::env;
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Apikey {
     pub key: String,
