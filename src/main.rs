@@ -121,7 +121,7 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
         .arg("-R")
         .arg("a+r")
         .arg(&playlist_dir)
-        .spawn()?
+        .status()
         .await?;
 
     println!("--playlist={}", playlist_path);
@@ -137,6 +137,7 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
 
     Ok(child)
 }
+
 
 async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box<dyn Error>> {
     println!("Requesting a new API key...");
