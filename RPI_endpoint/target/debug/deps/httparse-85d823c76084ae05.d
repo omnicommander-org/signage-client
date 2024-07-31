@@ -1,0 +1,12 @@
+/home/pi/RPI_metrics_json_loop_endpoint/target/debug/deps/libhttparse-85d823c76084ae05.rmeta: /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/lib.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/iter.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/macros.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/simd/mod.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/simd/swar.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/simd/neon.rs
+
+/home/pi/RPI_metrics_json_loop_endpoint/target/debug/deps/libhttparse-85d823c76084ae05.rlib: /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/lib.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/iter.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/macros.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/simd/mod.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/simd/swar.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/simd/neon.rs
+
+/home/pi/RPI_metrics_json_loop_endpoint/target/debug/deps/httparse-85d823c76084ae05.d: /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/lib.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/iter.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/macros.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/simd/mod.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/simd/swar.rs /home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/simd/neon.rs
+
+/home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/lib.rs:
+/home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/iter.rs:
+/home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/macros.rs:
+/home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/simd/mod.rs:
+/home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/simd/swar.rs:
+/home/pi/.cargo/registry/src/index.crates.io-6f17d22bba15001f/httparse-1.9.4/src/simd/neon.rs:
