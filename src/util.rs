@@ -2,7 +2,6 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use futures_util::StreamExt;
 use reqwest::Client;
-use screenshots::Screen;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{boxed::Box, error::Error, path::Path};
 use tokio::{
@@ -10,7 +9,6 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
 };
 use tokio::process::Command;
-use std::process::Output;
 use std::env;
 
 #[derive(Serialize, Deserialize, Clone)]
