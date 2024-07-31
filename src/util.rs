@@ -9,6 +9,8 @@ use tokio::{
     fs::{self, File},
     io::{AsyncReadExt, AsyncWriteExt},
 };
+use std::env;
+use std::process::Command;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Apikey {
@@ -138,7 +140,7 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
+/* pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
     match Screen::all() {
         Ok(screens) => {
             for screen in screens {
@@ -156,6 +158,26 @@ pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
     }
-}
+} */
 
+pub fn set_display() {
+    // Set the DISPLAY environment variable for the current process
+    env::set_var("DISPLAY", ":0");
+
+    // Optionally, print the current environment variable to verify
+    match env::var("DISPLAY") {
+        Ok(val) => println!("DISPLAY is set to: {}", val),
+        Err(e) => println!("Couldn't read DISPLAY: {}", e),
+    }
+
+    // Run a command that requires the DISPLAY environment variable
+    let output = Command::new("sh")
+        .arg("-c")
+        .arg("echo $DISPLAY")
+        .output()
+        .expect("Failed to execute command");
+
+    // Print the output of the command
+    println!("Output: {}", String::from_utf8_lossy(&output.stdout));
+}
 
