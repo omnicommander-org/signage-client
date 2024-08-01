@@ -35,11 +35,11 @@ impl Video {
         let path = Path::new(&self.asset_url);
         let extension = path.extension().and_then(std::ffi::OsStr::to_str).unwrap_or("bin");
         // Clean up the directory after a successful download
-        let dir = format!("/.local/share/signage");
+        let dir = format!("{}/.local/share/signage", std::env::var("HOME")?);
         
-        println!("Downloading Videos: {}", dir);
         let file_path = format!(
-            "/.local/share/signage/{}.{}",
+            "{}/.local/share/signage/{}.{}",
+            std::env::var("HOME")?,
             self.id,
             extension
         );

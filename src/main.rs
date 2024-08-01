@@ -101,30 +101,6 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
 }
 
 async fn start_mpv() -> Result<Child, Box<dyn Error>> {
-    let home_dir = std::env::var("HOME")?;
-    let playlist_path = format!("/home/pi/.local/share/signage/playlist.txt");
-    let playlist_dir = format!("/home/pi/.local/share/signage");
-
-    // Ensure the playlist and directory exist
-    if !Path::new(&playlist_path).exists() {
-        eprintln!("Playlist file does not exist: {}", playlist_path);
-        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::NotFound, "Playlist file not found")));
-    }
-
-    if !Path::new(&playlist_dir).exists() {
-        eprintln!("Playlist directory does not exist: {}", playlist_dir);
-        return Err(Box::new(std::io::Error::new(std::io::ErrorKind::NotFound, "Playlist directory not found")));
-    }
-
-    // Set read permissions for all users on the playlist directory
-    Command::new("chmod")
-        .arg("-R")
-        .arg("a+r")
-        .arg(&playlist_dir)
-        .status()
-        .await?;
-
-    println!("--playlist={}", playlist_path);
     let image_display_duration = 10;
     let child = Command::new("mpv")
         .arg("--loop-playlist=inf")
@@ -132,12 +108,11 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
         .arg("--no-terminal")
         .arg("--fullscreen")
         .arg(format!("--image-display-duration={}", image_display_duration))
-        .arg(format!("--playlist={}", playlist_path))
+        .arg(format!("--playlist={}/.local/share/signage/playlist.txt", std::env::var("HOME")?))
         .spawn()?;
 
     Ok(child)
 }
-
 
 async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box<dyn Error>> {
     println!("Requesting a new API key...");
@@ -207,15 +182,15 @@ async fn update_videos(
     let home = std::env::var("HOME")?;
 
     // Remove the playlist file
-    if Path::new(&format!("/.local/share/signage/playlist.txt")).try_exists()? {
-        tokio::fs::remove_file(format!("/.local/share/signage/playlist.txt")).await?;
+    if Path::new(&format!("{home}/.local/share/signage/playlist.txt")).try_exists()? {
+        tokio::fs::remove_file(format!("{home}/.local/share/signage/playlist.txt")).await?;
     }
 
     // Open the playlist file
     let mut file = tokio::fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(format!("/.local/share/signage/playlist.txt"))
+        .open(format!("{home}/.local/share/signage/playlist.txt"))
         .await?;
 
     for video in data.videos.clone() {
@@ -224,10 +199,9 @@ async fn update_videos(
         }
         // Download the video and get the file path
         let file_path = video.download(client).await?;
-        println!("Downloaded Video: {}", file_path);
         // Write the path to the playlist file
         file.write_all(format!("{}\n", file_path).as_bytes()).await?;
     }
-    cleanup_directory(&format!("/.local/share/signage")).await?;
+    cleanup_directory(&format!("{}/.local/share/signage", home)).await?;
     Ok(())
 }
