@@ -3,13 +3,22 @@
 pkgs.mkShell {
 	nativeBuildInputs = with pkgs.buildPackages;
 	[
-		latest.rustChannels.stable.rust
+        rustc
+        cargo
+        mold
+
+        cargo-deny
+        cargo-tarpaulin
+        cargo-audit
+        cargo-nextest
+        clippy
+        rustfmt
 		openssl
 		pkg-config
+
+
 		sqlx-cli
 		mpv
-		cargo-deny
         xorg.libxcb
 	];
 }
-
