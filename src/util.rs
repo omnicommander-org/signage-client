@@ -37,7 +37,7 @@ impl Video {
         // Clean up the directory after a successful download
         let dir = format!("/.local/share/signage");
         
-        
+        println!("Downloading Videos: {}", dir);
         let file_path = format!(
             "/.local/share/signage/{}.{}",
             self.id,

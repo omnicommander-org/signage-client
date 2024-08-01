@@ -224,6 +224,7 @@ async fn update_videos(
         }
         // Download the video and get the file path
         let file_path = video.download(client).await?;
+        println!("Downloaded Video Path: {}", file_path);
         // Write the path to the playlist file
         file.write_all(format!("{}\n", file_path).as_bytes()).await?;
     }
