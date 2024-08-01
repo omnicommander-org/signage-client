@@ -137,6 +137,7 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
         if path.is_file() {
             let filename = path.file_name().unwrap().to_string_lossy().to_string();
             // Ignore playlist.txt and data.json
+            println!("Getting Files: {:?}", filename);
             if filename != "playlist.txt" && filename != "data.json" {
                 // Delete the file if it's not in playlist.txt
                 if !playlist_files.iter().any(|f| f.contains(&filename)) {
