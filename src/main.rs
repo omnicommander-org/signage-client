@@ -119,7 +119,7 @@ async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box
     println!("Loading configuration...");
     config.load().await?;
     println!("Reloading data...------------");
-    println!("Requesting a new API key...{}", config.id);
+    println!("{}/get-new-key/{}", config.url, config.id);
     let res: Apikey = client
         .get(format!("{}/get-new-key/{}", config.url, config.id))
         .basic_auth(&config.username, Some(&config.password))
@@ -128,7 +128,7 @@ async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box
         .json()
         .await?;
 
-    println!("Received new API key: {}", res.key);
+    println!("Received new API key: {}", res);
     config.key = Some(res.key.clone());
     config.write().await?;
     Ok(res)
