@@ -102,8 +102,8 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
 
 async fn start_mpv() -> Result<Child, Box<dyn Error>> {
     let home_dir = std::env::var("HOME")?;
-    let playlist_path = format!("/.local/share/signage/playlist.txt");
-    let playlist_dir = format!("/.local/share/signage");
+    let playlist_path = format!("/home/pi/.local/share/signage/playlist.txt");
+    let playlist_dir = format!("/home/pi/.local/share/signage");
 
     // Ensure the playlist and directory exist
     if !Path::new(&playlist_path).exists() {
