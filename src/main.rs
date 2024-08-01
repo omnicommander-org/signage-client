@@ -24,6 +24,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // Load the configs
     println!("Loading configuration...");
     config.load().await?;
+    println!("Loaded configuration: {:?}", config);
     println!("Loading data...");
     data.load().await?;
 
