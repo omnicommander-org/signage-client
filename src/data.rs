@@ -19,7 +19,7 @@ impl Data {
         println!("Reading data.json: ");
         load_json(
             self,
-            &format!("home/pi/.local/share/signage"),
+            &format!("/.local/share/signage"),
             "data.json",
         )
         .await
@@ -29,7 +29,7 @@ impl Data {
         println!("Writing to data.json:");
         write_json(
             self,
-            &format!("home/pi/.local/share/signage/data.json"),
+            &format!("/.local/share/signage/data.json"),
         )
         .await
     }

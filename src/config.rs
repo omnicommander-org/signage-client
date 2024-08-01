@@ -20,7 +20,7 @@ impl Config {
         println!("Reading signage.json: ");
         load_json(
             self,
-            &format!("home/pi/.config/signage"),
+            &format!("/.config/signage"),
             "signage.json",
         )
         .await
@@ -32,7 +32,7 @@ impl Config {
         println!("Writing to signage.json: {}", json_content);
         write_json(
             self,
-            &format!("home/pi/.config/signage/signage.json"),
+            &format!("/.config/signage/signage.json"),
         )
         .await
     }
