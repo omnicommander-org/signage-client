@@ -128,7 +128,7 @@ async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box
         .json()
         .await?;
 
-    println!("Received new API key: {}", res);
+    println!("Received new API key: {}", res.key);
     config.key = Some(res.key.clone());
     config.write().await?;
     Ok(res)
