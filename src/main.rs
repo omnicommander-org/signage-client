@@ -41,8 +41,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         println!("Data Updated: {:?}", updated);    
     }
 
-    let mut interval = time::interval(Duration::from_secs(30));
-    let mut metrics_interval = time::interval(Duration::from_secs(60));
+    let mut interval = time::interval(Duration::from_secs(10));
+    let mut metrics_interval = time::interval(Duration::from_secs(1800));
     let mut mpv = start_mpv().await?;
 
     loop {
@@ -53,6 +53,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     println!("Updated: {:?}", updated);
                     println!("Data last updated: {:?}", last_update);
                     if updated > last_update {
+                        println!("Update Videos")
                         update_videos(&client, &mut config, &mut data, Some(updated)).await?;
                         mpv.kill().await?;
                     }
@@ -118,6 +119,7 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
 async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box<dyn Error>> {
     println!("Loading configuration...");
     config.load().await?;
+    println!("Reloading data...------------");
     println!("Reloading data...------------");
     println!("{}/get-new-key/{}", config.url, config.id);
     let res: Apikey = client
