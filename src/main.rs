@@ -53,7 +53,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     
                     println!("Updated: {:?}", updated);
                     println!("Data last updated: {:?}", last_update);
-                    if updated > last_update {
+                    if updated < last_update {
                         println!("Update Videos");
                         update_videos(&client, &mut config, &mut data, Some(updated)).await?;
                         mpv.kill().await?;
