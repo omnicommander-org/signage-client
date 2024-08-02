@@ -41,7 +41,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         println!("Data Updated: {:?}", updated);    
     }
 
-    let mut interval = time::interval(Duration::from_secs(10));
+    let mut interval = time::interval(Duration::from_secs(20));
     let mut metrics_interval = time::interval(Duration::from_secs(1800));
     let mut mpv = start_mpv().await?;
 
@@ -56,17 +56,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         println!("Update Videos");
                         update_videos(&client, &mut config, &mut data, Some(updated)).await?;
                         mpv.kill().await?;
+                        mpv = start_mpv().await?;
                     }
                 } else if updated.is_some() {
-                    // Handle the case where `data.last_update` is None and `updated` is Some.
                     println!("Updated: {:?}", updated);
                     println!("Data last updated: None");
                     update_videos(&client, &mut config, &mut data, updated).await?;
                     mpv.kill().await?;
+                    mpv = start_mpv().await?;
                 } else {
-                    // Handle the case where both `updated` and `data.last_update` are None, if necessary.
                     println!("No updates available.");
                 }
+
 
                 // Restart mpv if it exits
                 match mpv.try_wait() {
@@ -74,6 +75,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     Ok(None) => (),
                     Err(error) => eprintln!("Error waiting for mpv process: {error}"),
                 }
+                // Avoid restarting mpv too frequently
+                time::sleep(Duration::from_secs(60)).await;
             }
             _ = metrics_interval.tick() => {
                 let metrics = collect_and_write_metrics(&config.id).await;
