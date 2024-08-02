@@ -50,15 +50,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
             _ = interval.tick() => {
                 let updated = sync(&client, &config).await?;
                 if let (Some(updated), Some(last_update)) = (updated, data.last_update) {
-                    
                     println!("Updated: {:?}", updated);
                     println!("Data last updated: {:?}", last_update);
-                    if updated < last_update {
+                    if updated > last_update {
                         println!("Update Videos");
                         update_videos(&client, &mut config, &mut data, Some(updated)).await?;
                         mpv.kill().await?;
                     }
-                
                 } else if updated.is_some() {
                     // Handle the case where `data.last_update` is None and `updated` is Some.
                     println!("Updated: {:?}", updated);
@@ -151,7 +149,7 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
 }
 
 async fn receive_videos(client: &Client, config: &mut Config) -> Result<Vec<Video>, Box<dyn Error>> {
-    let url = format!("{}/receive-videos/{}", config.url, config.id);
+    let url = format!("{}/recieve-videos/{}", config.url, config.id);
 
     // Request a new authorization token
     let new_key = get_new_key(client, config).await?;
