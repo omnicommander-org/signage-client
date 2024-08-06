@@ -7,30 +7,30 @@ use uuid::Uuid;
 use crate::util::run_command;
 
 pub async fn temp() -> String {
-    run_command("vcgencmd", &["measure_temp"]).await.unwrap_or_default()
+    run_command("sh", &["-c", "cat /sys/class/thermal/thermal_zone0/temp | column -s $'\\t' -t | sed 's/\\(.\\)..$/.\\1/'"]).await.unwrap_or_default()
 }
 
-pub async fn cpuusage() -> String {
-    run_command("sh", &["-c", "top -bn1 | grep 'Cpu(s)'"]).await.unwrap_or_default()
+async fn cpu_usage() -> String {
+    run_command("sh", &["-c", "top -bn1 | awk '/Cpu/ {print $2}'"]).await.unwrap_or_default()
 }
 
-pub async fn memory() -> String {
-    run_command("free", &["-h"]).await.unwrap_or_default()
+async fn memory() -> String {
+    run_command("sh", &["-c", "free -h --si | awk '/Mem/ {printf \"%3.1f\", $3/$2*100}'"]).await.unwrap_or_default()
 }
 
-pub async fn diskusage() -> String {
-    run_command("df", &["-h"]).await.unwrap_or_default()
+async fn disk_usage() -> String {
+    run_command("sh", &["-c", "df --output=pcent / | tr -dc '0-9'"]).await.unwrap_or_default()
 }
 
-pub async fn swapusage() -> String {
-    run_command("swapon", &["--summary"]).await.unwrap_or_default()
+async fn swap_usage() -> String {
+    run_command("sh", &["-c", "free -h --si | awk '/Swap/ {printf \"%3.1f\", $3/$2*100}'"]).await.unwrap_or_default()
 }
 
-pub async fn uptime() -> String {
-    run_command("uptime", &[]).await.unwrap_or_default()
+async fn uptime() -> String {
+    run_command("sh", &["-c", "uptime | awk '{print $3}' | tr -d ','"]).await.unwrap_or_default()
 }
 
-pub async fn mpvstatus() -> String {
+async fn mpvstatus() -> String {
     let output = run_command("sh", &["-c", "ps aux | grep -v grep | grep mpv"]).await.unwrap_or_default();
     if output.is_empty() {
         "MPV is not running".to_string()
@@ -55,10 +55,10 @@ pub async fn collect_and_write_metrics(client_id: &str) -> Metrics {
     let metrics = Metrics {
         client_id: client_id.to_string(),
         temp: temp().await,
-        cpuusage: cpuusage().await,
+        cpuusage: cpu_usage().await,
         memory: memory().await,
-        diskusage: diskusage().await,
-        swapusage: swapusage().await,
+        diskusage: disk_usage().await,
+        swapusage: swap_usage().await,
         uptime: uptime().await,
         mpvstatus: mpvstatus().await,
     };
