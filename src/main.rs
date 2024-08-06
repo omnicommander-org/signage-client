@@ -28,7 +28,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("Loading data...");
     data.load().await?;
 
-    let _ = wait_for_api(&client, &config).await;
+    let _ = wait_for_api(&client, &config).await?;
        
     println!("API key is not set. Requesting a new API key...");
     config.key = Some(get_new_key(&client, &mut config).await?.key);
@@ -43,7 +43,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut interval = time::interval(Duration::from_secs(20));
     let mut metrics_interval = time::interval(Duration::from_secs(1800));
-    mpv.kill().await?;
     let mut mpv = start_mpv().await?;
 
     loop {
@@ -69,13 +68,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     println!("No updates available.");
                 }
 
-
                 // Restart mpv if it exits
                 match mpv.try_wait() {
-                    Ok(Some(_)) => mpv = start_mpv().await?,
+                    Ok(Some(_)) => {
+                        println!("mpv process exited, restarting...");
+                        mpv = start_mpv().await?;
+                    },
                     Ok(None) => (),
                     Err(error) => eprintln!("Error waiting for mpv process: {error}"),
                 }
+
                 // Avoid restarting mpv too frequently
                 time::sleep(Duration::from_secs(60)).await;
             }
@@ -107,7 +109,6 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
 }
 
 async fn start_mpv() -> Result<Child, Box<dyn Error>> {
-    mpv.kill().await?;
     let image_display_duration = 10;
     let child = Command::new("mpv")
         .arg("--loop-playlist=inf")
@@ -210,8 +211,9 @@ async fn update_videos(
         // Download the video and get the file path
         let file_path = video.download(client).await?;
         // Write the path to the playlist file
-        file.write_all(format!("{}\n", file_path).as_bytes()).await?;
+        file.write_all(format!("{}\n", file_path).await?;
     }
     cleanup_directory(&format!("{}/.local/share/signage", home)).await?;
     Ok(())
 }
+
