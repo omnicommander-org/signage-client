@@ -14,7 +14,8 @@ pkgs.mkShell {
         rustfmt
 
 		mpv
-    xorg.libxcb
+        xorg.libxcb
+        scrot
     ];
 }
 
