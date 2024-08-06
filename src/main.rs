@@ -43,6 +43,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut interval = time::interval(Duration::from_secs(20));
     let mut metrics_interval = time::interval(Duration::from_secs(1800));
+    mpv.kill().await?;
     let mut mpv = start_mpv().await?;
 
     loop {
@@ -106,6 +107,7 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
 }
 
 async fn start_mpv() -> Result<Child, Box<dyn Error>> {
+    mpv.kill().await?;
     let image_display_duration = 10;
     let child = Command::new("mpv")
         .arg("--loop-playlist=inf")
