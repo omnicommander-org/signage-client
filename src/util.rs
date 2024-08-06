@@ -150,25 +150,14 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/* pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
-    match Screen::all() {
-        Ok(screens) => {
-            for screen in screens {
-                match screen.capture() {
-                    Ok(image) => {
-                        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
-                    }
-                    Err(e) => eprintln!("Failed to capture screenshot for display {}: {}", screen.display_info.id, e),
-                }
-            }
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("Failed to get screen information: {}", e);
-            Ok(())
-        }
-    }
-} */
+pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
+    Command::new("scrot")
+        .arg(format!("-F {}/.local/share/signage/screenshot.png", env::var("HOME")))
+        .arg("-o")
+        .arg("-t 320x200").output().await?;
+
+    Ok(())
+}
 
 
 pub fn set_display() {
