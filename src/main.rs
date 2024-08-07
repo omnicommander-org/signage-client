@@ -45,12 +45,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut interval = time::interval(Duration::from_secs(20));
     let mut metrics_interval = time::interval(Duration::from_secs(1800));
-    let mut mpv = start_mpv().await?;
-    mpv.kill().await?;
     let mut terminate = signal(SignalKind::terminate())?;
     let mut interrupt = signal(SignalKind::interrupt())?;
     let mut hup = signal(SignalKind::hangup())?;
 
+    let mut mpv = start_mpv().await?;
+    mpv.kill().await?;
     loop {
         tokio::select! {
             _ = interval.tick() => {
@@ -77,16 +77,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 // Restart mpv if it exits
                 match mpv.try_wait() {
                     Ok(Some(_)) => {
-                        //mpv.kill().await?;
                         println!("mpv process exited, restarting... ----------------------------------------------");
-                        //mpv = start_mpv().await?;
+                        mpv = start_mpv().await?;
                     },
                     Ok(None) => (),
                     Err(error) => eprintln!("Error waiting for mpv process: {error}"),
                 }
 
                 // Avoid restarting mpv too frequently
-                time::sleep(Duration::from_secs(60)).await;
+                time::sleep(Duration::from_secs(10)).await;
             }
             _ = metrics_interval.tick() => {
                 let metrics = collect_and_write_metrics(&config.id).await;
@@ -150,8 +149,6 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
 async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box<dyn Error>> {
     println!("Loading configuration...");
     config.load().await?;
-    println!("Reloading data...------------");
-    println!("Reloading data...------------");
     println!("{}/get-new-key/{}", config.url, config.id);
     let res: Apikey = client
         .get(format!("{}/get-new-key/{}", config.url, config.id))
