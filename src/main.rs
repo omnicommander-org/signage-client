@@ -3,9 +3,11 @@ use config::Config;
 use data::Data;
 use reqwest::{Client, StatusCode};
 use std::{boxed::Box, error::Error, path::Path};
+use std::sync::Arc;
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
+use tokio::signal::unix::{signal, SignalKind};
 use util::{set_display, cleanup_directory, Apikey, Updated, Video};
 use reporting::{collect_and_write_metrics, send_metrics};
 
@@ -29,7 +31,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     data.load().await?;
 
     let _ = wait_for_api(&client, &config).await?;
-       
+
     println!("API key is not set. Requesting a new API key...");
     config.key = Some(get_new_key(&client, &mut config).await?.key);
     config.write().await?;
@@ -44,6 +46,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut interval = time::interval(Duration::from_secs(20));
     let mut metrics_interval = time::interval(Duration::from_secs(1800));
     let mut mpv = start_mpv().await?;
+
+    let mut terminate = signal(SignalKind::terminate())?;
+    let mut interrupt = signal(SignalKind::interrupt())?;
+    let mut hup = signal(SignalKind::hangup())?;
 
     loop {
         tokio::select! {
@@ -85,9 +91,27 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 let metrics = collect_and_write_metrics(&config.id).await;
                 send_metrics(&config.id, &metrics, &config.key.as_ref().unwrap_or(&String::new()));
             }
+            _ = terminate.recv() => {
+                println!("Received SIGTERM, terminating...");
+                mpv.kill().await?;
+                break;
+            }
+            _ = interrupt.recv() => {
+                println!("Received SIGINT, terminating...");
+                mpv.kill().await?;
+                break;
+            }
+            _ = hup.recv() => {
+                println!("Received SIGHUP, reloading configuration...");
+                config.load().await?;
+                data.load().await?;
+            }
         }
     }
+
+    Ok(())
 }
+
 
 async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn Error>> {
     let mut interval = time::interval(Duration::from_secs(1));
