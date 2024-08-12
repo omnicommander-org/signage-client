@@ -87,7 +87,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 time::sleep(Duration::from_secs(10)).await;
             }
             _ = metrics_interval.tick() => {
+                
                 let metrics = collect_and_write_metrics(&config.id).await;
+                println!("Updated: {:?}", metrics);
                 send_metrics(&config.id, &metrics, &config.key.as_ref().unwrap_or(&String::new()));
             }
             _ = terminate.recv() => {
