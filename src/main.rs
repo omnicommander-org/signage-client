@@ -77,7 +77,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 // Restart mpv if it exits
                 match mpv.try_wait() {
                     Ok(Some(_)) => {
-                        println!("mpv process exited, restarting... ----------------------------------------------");
                         mpv = start_mpv().await?;
                     },
                     Ok(None) => (),
