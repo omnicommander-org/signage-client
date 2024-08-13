@@ -43,7 +43,7 @@ async fn mpvstatus() -> String {
 pub struct Metrics {
     client_id: String,
     temp: String,
-    cpuusage: String,
+    processes: String,
     memory: String,
     diskusage: String,
     swapusage: String,
@@ -55,7 +55,7 @@ pub async fn collect_and_write_metrics(client_id: &str) -> Metrics {
     let metrics = Metrics {
         client_id: client_id.to_string(),
         temp: temp().await,
-        cpuusage: cpu_usage().await,
+        processes: cpu_usage().await,
         memory: memory().await,
         diskusage: disk_usage().await,
         swapusage: swap_usage().await,
