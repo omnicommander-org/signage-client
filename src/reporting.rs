@@ -33,9 +33,9 @@ async fn uptime() -> String {
 async fn mpvstatus() -> String {
     let output = run_command("sh", &["-c", "ps aux | grep -v grep | grep mpv"]).await.unwrap_or_default();
     if output.is_empty() {
-        "MPV is not running".to_string()
+        "running".to_string()
     } else {
-        "MPV is running".to_string()
+        "not running".to_string()
     }
 }
 
