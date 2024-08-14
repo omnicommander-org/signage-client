@@ -16,6 +16,7 @@ impl Data {
 
     /// Loads `Data` from $HOME/.local/share/signage/data.json
     pub async fn load(&mut self) -> Result<(), Box<dyn Error>> {
+        println!("Reading data.json: ");
         load_json(
             self,
             &format!("{}/.local/share/signage", env::var("HOME")?),
@@ -25,6 +26,7 @@ impl Data {
     }
     /// Writes `Data` to $HOME/.local/share/signage/data.json
     pub async fn write(&self) -> Result<(), Box<dyn Error>> {
+        println!("Writing to data.json:");
         write_json(
             self,
             &format!("{}/.local/share/signage/data.json", env::var("HOME")?),

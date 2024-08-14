@@ -2,15 +2,15 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use futures_util::StreamExt;
 use reqwest::Client;
-use screenshots::Screen;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{boxed::Box, error::Error, path::Path};
 use tokio::{
     fs::{self, File},
     io::{AsyncReadExt, AsyncWriteExt},
 };
+use tokio::process::Command;
+
 use std::env;
-use std::process::Command;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Apikey {
@@ -35,7 +35,6 @@ impl Video {
         let path = Path::new(&self.asset_url);
         let extension = path.extension().and_then(std::ffi::OsStr::to_str).unwrap_or("bin");
         // Clean up the directory after a successful download
-        let dir = format!("{}/.local/share/signage", std::env::var("HOME")?);
         
         
         let file_path = format!(
@@ -98,6 +97,16 @@ pub async fn load_json<T: Serialize + DeserializeOwned>(
     Ok(())
 }
 
+
+pub async fn run_command(command: &str, args: &[&str]) -> Result<String, Box<dyn std::error::Error>> {
+    let output = Command::new(command)
+        .args(args)
+        .output()
+        .await?;
+    
+    Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+}
+
 /// Writes json from `T` into `path`
 pub async fn write_json<T: Serialize>(json: &T, path: &str) -> Result<(), Box<dyn Error>> {
     let mut file = File::create(path).await?;
@@ -128,6 +137,7 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
         if path.is_file() {
             let filename = path.file_name().unwrap().to_string_lossy().to_string();
             // Ignore playlist.txt and data.json
+            println!("Getting Files: {:?}", filename);
             if filename != "playlist.txt" && filename != "data.json" {
                 // Delete the file if it's not in playlist.txt
                 if !playlist_files.iter().any(|f| f.contains(&filename)) {
@@ -140,25 +150,15 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/* pub fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
-    match Screen::all() {
-        Ok(screens) => {
-            for screen in screens {
-                match screen.capture() {
-                    Ok(image) => {
-                        image.save(format!("{}/.local/share/signage/screenshot-display-{}.png", std::env::var("HOME")?, screen.display_info.id))?;
-                    }
-                    Err(e) => eprintln!("Failed to capture screenshot for display {}: {}", screen.display_info.id, e),
-                }
-            }
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("Failed to get screen information: {}", e);
-            Ok(())
-        }
-    }
-} */
+pub async fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
+    Command::new("scrot")
+        .arg(format!("-F {}/.local/share/signage/screenshot.png", env::var("HOME")?))
+        .arg("-o")
+        .arg("-t 320x200").output().await?;
+
+    Ok(())
+}
+
 
 pub fn set_display() {
     // Set the DISPLAY environment variable for the current process
@@ -170,14 +170,5 @@ pub fn set_display() {
         Err(e) => println!("Couldn't read DISPLAY: {}", e),
     }
 
-    // Run a command that requires the DISPLAY environment variable
-    let output = Command::new("sh")
-        .arg("-c")
-        .arg("echo $DISPLAY")
-        .output()
-        .expect("Failed to execute command");
-
-    // Print the output of the command
-    println!("Output: {}", String::from_utf8_lossy(&output.stdout));
+   
 }
-

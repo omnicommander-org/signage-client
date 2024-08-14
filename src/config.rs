@@ -17,6 +17,7 @@ impl Config {
     }
     /// Loads `Config` from $HOME/.config/signage/signage.json
     pub async fn load(&mut self) -> Result<(), Box<dyn Error>> {
+        println!("Reading signage.json: ");
         load_json(
             self,
             &format!("{}/.config/signage", env::var("HOME")?),
