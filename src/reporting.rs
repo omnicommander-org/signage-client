@@ -5,6 +5,8 @@ use reqwest::blocking::Client;
 use reqwest::header::{CONTENT_TYPE, HeaderValue, HeaderMap};
 use uuid::Uuid;
 use crate::util::run_command;
+use crate::config::Config;
+
 
 pub async fn temp() -> String {
     run_command("sh", &["-c", "cat /sys/class/thermal/thermal_zone0/temp | column -s $'\\t' -t | sed 's/\\(.\\)..$/.\\1/'"]).await.unwrap_or_default()
