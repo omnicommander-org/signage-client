@@ -4,7 +4,6 @@ use std::io::Write;
 use reqwest::blocking::Client;
 use reqwest::header::{CONTENT_TYPE, HeaderValue, HeaderMap};
 use uuid::Uuid;
-use config::Config;
 use crate::util::run_command;
 
 pub async fn temp() -> String {
@@ -77,7 +76,7 @@ pub async fn collect_and_write_metrics(client_id: &str) -> Metrics {
     metrics
 }
 
-pub fn send_metrics(client_id: &str, metrics: &Metrics, api_key: &str) {
+pub fn send_metrics(client_id: &str, metrics: &Metrics, api_key: &str, config: &Config) {
     let mut config = Config::new();
     // Check if the client_id is a valid UUID
     if let Err(_) = Uuid::parse_str(client_id) {

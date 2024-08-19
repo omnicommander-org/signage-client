@@ -90,7 +90,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 
                 let metrics = collect_and_write_metrics(&config.id).await;
                 println!("Running Metrics");
-                send_metrics(&config.id, &metrics, &config.key.as_ref().unwrap_or(&String::new()));
+                send_metrics(&config.id, &metrics, &config.key.as_ref().unwrap_or(&String::new()), &config);
             }
             _ = terminate.recv() => {
                 println!("Received SIGTERM, terminating...");
