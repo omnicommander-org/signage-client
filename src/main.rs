@@ -87,10 +87,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 time::sleep(Duration::from_secs(10)).await;
             }
             _ = metrics_interval.tick() => {
-                
                 let metrics = collect_and_write_metrics(&config.id).await;
                 println!("Running Metrics");
                 send_metrics(&config.id, &metrics, &config.key.as_ref().unwrap_or(&String::new()), &config);
+
+                // Check client actions
+                let actions = get_client_actions(&client, &config).await;
+                if let Some(actions) = actions {
+                    if actions.restart {
+                        restart_device().await;
+                    }
+                    if actions.screenshot {
+                        take_screenshot().await;
+                    }
+                }
             }
             _ = terminate.recv() => {
                 println!("Received SIGTERM, terminating...");
@@ -240,3 +250,37 @@ async fn update_videos(
     Ok(())
 }
 
+// Function to retrieve client actions
+async fn get_client_actions(client: &Client, config: &Config) -> Option<ClientActions> {
+    let res = client
+        .get(format!("{}/client-actions/{}", config.url, config.id))
+        .header("APIKEY", config.key.clone().unwrap_or_default())
+        .send()
+        .await
+        .ok()?;
+
+    if res.status().is_success() {
+        res.json::<ClientActions>().await.ok()
+    } else {
+        println!("Failed to retrieve client actions: {:?}", res.status());
+        None
+    }
+}
+
+// Function to restart the Raspberry Pi
+async fn restart_device() {
+    println!("Restarting device...");
+    SyncCommand::new("sudo")
+        .arg("reboot")
+        .output()
+        .expect("Failed to restart device");
+}
+
+// Function to take a screenshot
+async fn take_screenshot() {
+    println!("Taking screenshot...");
+    SyncCommand::new("scrot")
+        .arg("/home/pi/screenshot.png")
+        .output()
+        .expect("Failed to take screenshot");
+}
