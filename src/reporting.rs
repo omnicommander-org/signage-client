@@ -77,7 +77,6 @@ pub async fn collect_and_write_metrics(client_id: &str) -> Metrics {
 }
 
 pub fn send_metrics(client_id: &str, metrics: &Metrics, api_key: &str, config: &Config) {
-    let mut config = Config::new();
     // Check if the client_id is a valid UUID
     if let Err(_) = Uuid::parse_str(client_id) {
         println!("Invalid client ID format: {}", client_id);
