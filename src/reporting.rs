@@ -4,6 +4,7 @@ use std::io::Write;
 use reqwest::blocking::Client;
 use reqwest::header::{CONTENT_TYPE, HeaderValue, HeaderMap};
 use uuid::Uuid;
+use config::Config;
 use crate::util::run_command;
 
 pub async fn temp() -> String {
@@ -77,6 +78,7 @@ pub async fn collect_and_write_metrics(client_id: &str) -> Metrics {
 }
 
 pub fn send_metrics(client_id: &str, metrics: &Metrics, api_key: &str) {
+    let mut config = Config::new();
     // Check if the client_id is a valid UUID
     if let Err(_) = Uuid::parse_str(client_id) {
         println!("Invalid client ID format: {}", client_id);
@@ -84,7 +86,7 @@ pub fn send_metrics(client_id: &str, metrics: &Metrics, api_key: &str) {
     }
 
     let client = Client::new();
-    let url = format!("https://ds-dev-api.omnicommando.com/client_vitals/{}", client_id);
+    let url = format!("{}/client_vitals/{}", config.url, client_id);
     
     // Print the URL for debugging
     println!("Sending metrics to URL: {}", url);
