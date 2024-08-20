@@ -289,12 +289,22 @@ async fn restart_device() {
 
 async fn take_screenshot() {
     println!("Taking screenshot...");
-    let status = Command::new("Display=:0 scrot")
-        .arg("/home/pi/screenshot.png")
-        .arg("-o")
+
+    // Use ffmpeg to capture a frame from the video
+    let status = Command::new("ffmpeg")
+        .arg("-f")
+        .arg("x11grab")
+        .arg("-video_size")
+        .arg("1920x1080") // Adjust to your screen resolution
+        .arg("-i")
+        .arg(":0.0")
+        .arg("-vframes")
+        .arg("1")
+        .arg("/home/pi/display.png")
         .status()
         .await;
 
+    // Check the result of the command execution
     match status {
         Ok(status) if status.success() => println!("Screenshot taken successfully."),
         Ok(status) => println!("Failed to take screenshot, exit code: {}", status),
