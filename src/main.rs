@@ -289,8 +289,9 @@ async fn restart_device() {
 
 async fn take_screenshot() {
     println!("Taking screenshot...");
-    let status = Command::new("scrot")
+    let status = Command::new("Display=:0 scrot")
         .arg("/home/pi/screenshot.png")
+        .arg("-o")
         .status()
         .await;
 
