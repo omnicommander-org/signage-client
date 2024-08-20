@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use config::Config;
 use data::Data;
 use reqwest::{Client, StatusCode};
-use std::{boxed::Box, error::Error, path::Path, thread::sleep, time::Duration};
+use std::{boxed::Box, error::Error, path::Path, thread::sleep};
 use screenshots::Screen;
 use image::{ImageBuffer, RgbaImage};
 use tokio::process::{Child, Command};
