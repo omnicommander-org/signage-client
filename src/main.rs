@@ -296,9 +296,10 @@ async fn restart_device(client: &Client, config: &Config) {
 }
 
 async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
-    let url = format!("{}/update-restart/{}", config.url, config.id);
+    let url = format!("{}/update-restart-device/{}", config.url, config.id);
     let response = client
         .post(&url)
+        .header("APIKEY", config.key.clone().unwrap_or_default())
         .json(&serde_json::json!({ "restart": false }))
         .send()
         .await?;
