@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use config::Config;
 use data::Data;
 use reqwest::{Client, StatusCode};
-use std::{boxed::Box, error::Error, path::Path, thread::sleep};
+use std::{boxed::Box, error::Error, path::Path};
 use screenshots::Screen;
 use image::{ImageBuffer, RgbaImage};
 use tokio::process::{Child, Command};
@@ -315,21 +315,24 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 }
 
 
-async fn take_screenshot() {
+async fn take_screenshot() -> Result<(), Box<dyn Error>> {
     println!("Taking screenshot...");
-    let screens = Screen::all().unwrap();
+
+    let screens = Screen::all()?;
     let screen = &screens[0];
-    let image = screen.capture().unwrap();
-        let width = image.width();
-        let height = image.height();
-        let buffer = image.to_vec(); // Get the raw pixel data as Vec<u8>
+    let image = screen.capture()?;
+    let width = image.width();
+    let height = image.height();
+    let buffer = image.to_vec(); // Get the raw pixel data as Vec<u8>
 
-        // Convert the buffer to an image
-        let img_buffer: RgbaImage = ImageBuffer::from_raw(width as u32, height as u32, buffer).unwrap();
+    // Convert the buffer to an image
+    let img_buffer: RgbaImage = ImageBuffer::from_raw(width as u32, height as u32, buffer)
+        .ok_or("Failed to create image buffer")?;
 
-        // Save the image
-        let path = Path::new("/home/pi/screenshot/new_screenshot.png");
-        img_buffer.save(path)?;
+    // Save the image
+    let path = Path::new("/home/pi/screenshot/new_screenshot.png");
+    img_buffer.save(path)?;
 
-        println!("Screenshot saved successfully.");
+    println!("Screenshot saved successfully.");
+    Ok(())
 }
