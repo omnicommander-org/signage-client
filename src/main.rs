@@ -273,7 +273,15 @@ async fn get_client_actions(client: &Client, config: &Config) -> Option<ClientAc
     }
 }
 
-async fn restart_device() {
+async fn restart_device(client: &Client, config: &Config) {
+    // Update the restart flag to false
+    let update_result = update_restart_flag(client, config).await;
+    
+    if let Err(e) = update_result {
+        println!("Failed to update restart flag: {}", e);
+        return;
+    }
+
     println!("Restarting device...");
     let status = Command::new("sudo")
         .arg("reboot")
@@ -286,6 +294,23 @@ async fn restart_device() {
         Err(e) => println!("Failed to execute reboot command: {}", e),
     }
 }
+
+async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
+    let url = format!("{}/update-restart/{}", config.url, config.id);
+    let response = client
+        .post(&url)
+        .json(&serde_json::json!({ "restart": false }))
+        .send()
+        .await?;
+    
+    if response.status().is_success() {
+        println!("Restart flag successfully updated.");
+        Ok(())
+    } else {
+        Err(format!("Failed to update restart flag: {:?}", response.status()).into())
+    }
+}
+
 
 async fn take_screenshot() {
     println!("Taking screenshot...");
