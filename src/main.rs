@@ -101,7 +101,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         restart_device(&client, &config).await;
                     }
                     if actions.screenshot {
-                        take_screenshot().await;
+                        if let Err(e) = take_screenshot().await {
+                            eprintln!("Failed to take screenshot: {}", e);
+                        }
                     }
                 }
             }
