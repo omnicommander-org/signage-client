@@ -250,7 +250,12 @@ async fn update_videos(
     Ok(())
 }
 
-// Function to retrieve client actions
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ClientActions {
+    pub client_id: Uuid,
+    pub restart: bool,
+    pub screenshot: bool,
+}
 async fn get_client_actions(client: &Client, config: &Config) -> Option<ClientActions> {
     let res = client
         .get(format!("{}/client-actions/{}", config.url, config.id))
@@ -267,20 +272,30 @@ async fn get_client_actions(client: &Client, config: &Config) -> Option<ClientAc
     }
 }
 
-// Function to restart the Raspberry Pi
 async fn restart_device() {
     println!("Restarting device...");
-    SyncCommand::new("sudo")
+    let status = Command::new("sudo")
         .arg("reboot")
-        .output()
-        .expect("Failed to restart device");
+        .status()
+        .await;
+
+    match status {
+        Ok(status) if status.success() => println!("Device is restarting..."),
+        Ok(status) => println!("Failed to restart device, exit code: {}", status),
+        Err(e) => println!("Failed to execute reboot command: {}", e),
+    }
 }
 
-// Function to take a screenshot
 async fn take_screenshot() {
     println!("Taking screenshot...");
-    SyncCommand::new("scrot")
+    let status = Command::new("scrot")
         .arg("/home/pi/screenshot.png")
-        .output()
-        .expect("Failed to take screenshot");
+        .status()
+        .await;
+
+    match status {
+        Ok(status) if status.success() => println!("Screenshot taken successfully."),
+        Ok(status) => println!("Failed to take screenshot, exit code: {}", status),
+        Err(e) => println!("Failed to execute screenshot command: {}", e),
+    }
 }
