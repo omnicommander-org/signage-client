@@ -150,14 +150,6 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub async fn capture_screenshot() -> Result<(), Box<dyn std::error::Error>> {
-    Command::new("scrot")
-        .arg(format!("-F {}/.local/share/signage/screenshot.png", env::var("HOME")?))
-        .arg("-o")
-        .arg("-t 320x200").output().await?;
-
-    Ok(())
-}
 
 
 pub fn set_display() {

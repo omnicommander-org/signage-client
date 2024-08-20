@@ -3,7 +3,6 @@ use config::Config;
 use data::Data;
 use reqwest::{Client, StatusCode};
 use std::{boxed::Box, error::Error, path::Path};
-use std::sync::Arc;
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;

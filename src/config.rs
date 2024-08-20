@@ -38,8 +38,8 @@ impl Config {
     }
 
     /// Updates the API key and writes the updated configuration to the file
-    pub async fn update_key(&mut self, new_key: String) -> Result<(), Box<dyn Error>> {
+    /* pub async fn update_key(&mut self, new_key: String) -> Result<(), Box<dyn Error>> {
         self.key = Some(new_key);
         self.write().await
-    }
+    } */
 }
