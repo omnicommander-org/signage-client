@@ -11,6 +11,8 @@ use tokio::signal::unix::{signal, SignalKind};
 use util::{set_display, cleanup_directory, Apikey, Updated, Video};
 use reporting::{collect_and_write_metrics, send_metrics};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
 mod reporting;
 mod config;
 mod data;
