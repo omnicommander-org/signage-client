@@ -96,7 +96,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 let actions = get_client_actions(&client, &config).await;
                 if let Some(actions) = actions {
                     if actions.restart {
-                        restart_device().await;
+                        restart_device(&client, &config).await;
                     }
                     if actions.screenshot {
                         take_screenshot().await;
