@@ -315,25 +315,19 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 
 async fn take_screenshot() {
     println!("Taking screenshot...");
+    let screens = Screen::all().unwrap();
+    let screen = &screens[0];
+    let image = screen.capture().unwrap();
+        let width = image.width();
+        let height = image.height();
+        let buffer = image.to_vec(); // Get the raw pixel data as Vec<u8>
 
-    // Use ffmpeg to capture a frame from the video
-    let status = Command::new("ffmpeg")
-        .arg("-f")
-        .arg("x11grab")
-        .arg("-video_size")
-        .arg("1920x1080") // Adjust to your screen resolution
-        .arg("-i")
-        .arg(":0.0")
-        .arg("-vframes")
-        .arg("1")
-        .arg("/home/pi/display.png")
-        .status()
-        .await;
+        // Convert the buffer to an image
+        let img_buffer: RgbaImage = ImageBuffer::from_raw(width as u32, height as u32, buffer).unwrap();
 
-    // Check the result of the command execution
-    match status {
-        Ok(status) if status.success() => println!("Screenshot taken successfully."),
-        Ok(status) => println!("Failed to take screenshot, exit code: {}", status),
-        Err(e) => println!("Failed to execute screenshot command: {}", e),
-    }
+        // Save the image
+        let path = Path::new("/home/pi/screenshot/new_screenshot.png");
+        img_buffer.save(path)?;
+
+        println!("Screenshot saved successfully.");
 }
