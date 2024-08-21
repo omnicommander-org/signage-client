@@ -320,20 +320,24 @@ async fn take_screenshot() -> Result<(), Box<dyn Error>> {
     env::set_var("DISPLAY", ":0");
     env::set_var("XDG_RUNTIME_DIR", "/run/user/1000");
     println!("Taking screenshot");
-    
-    let output = Command::new("socat")
+
+    // Start the socat process to interact with the mpv IPC server
+    let mut child = Command::new("socat")
         .arg("-")
         .arg("/tmp/mpvsocket")
         .stdin(std::process::Stdio::piped())
-        .output()
-        .await?;
+        .spawn()?;
+
+    // Send the screenshot command to the mpv IPC server
+    if let Some(stdin) = child.stdin.as_mut() {
+        let ipc_command = r#"{ "command": ["screenshot"] }"#;
+        stdin.write_all(ipc_command.as_bytes()).await?;
+    }
+
+    // Wait for the socat process to complete
+    let output = child.wait_with_output().await?;
 
     if output.status.success() {
-        let ipc_command = r#"{ "command": ["screenshot"] }"#;
-        if let Some(mut stdin) = output.stdin.take() {
-            stdin.write_all(ipc_command.as_bytes()).await?;
-        }
-
         println!("Screenshot command sent successfully");
     } else {
         eprintln!(
@@ -344,3 +348,4 @@ async fn take_screenshot() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
