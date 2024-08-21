@@ -58,8 +58,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             _ = interval.tick() => {
                 let updated = sync(&client, &config).await?;
                 if let (Some(updated), Some(last_update)) = (updated, data.last_update) {
-                    println!("Updated: {:?}", updated);
-                    println!("Data last updated: {:?}", last_update);
+                
                     if updated > last_update {
                         println!("Update Videos");
                         update_videos(&client, &mut config, &mut data, Some(updated)).await?;
@@ -319,7 +318,7 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
     env::set_var("DISPLAY", ":0");
     env::set_var("XDG_RUNTIME_DIR", "/run/user/1000");
-
+    println!("Taking screenshot");
     let output = Command::new("/usr/bin/mpv") // Use full path if necessary
         .arg("--screenshot-directory=/home/pi")
         .arg("--screenshot-format=png")
