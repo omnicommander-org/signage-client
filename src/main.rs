@@ -332,7 +332,6 @@ async fn take_screenshot() -> Result<(), Box<dyn Error>> {
 
         let data = std::slice::from_raw_parts((*image).data as *const u8, (width * height * 4) as usize);
         let buffer: ImageBuffer<Rgba<u8>, _> = ImageBuffer::from_raw(width, height, data.to_vec()).unwrap();
-
         buffer.save("/home/pi/screenshot.png")?;
 
         xlib::XDestroyImage(image);
