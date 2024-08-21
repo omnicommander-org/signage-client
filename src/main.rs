@@ -3,8 +3,6 @@ use config::Config;
 use data::Data;
 use reqwest::{Client, StatusCode};
 use std::{boxed::Box, error::Error, path::Path};
-use screenshots::Screen;
-use image::{ImageBuffer, RgbaImage};
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
@@ -15,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use std::fs::File;
 use std::io::{Read, Write};
+use image::{ImageBuffer, Rgba};
 
 mod reporting;
 mod config;
@@ -320,14 +319,22 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 
 
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
-    let mut buffer = vec![0u8; 1920 * 1080 * 4];
-    let mut framebuffer = File::open("/dev/fb0")?;
-    framebuffer.read_exact(&mut buffer)?;
+    let width = 1920;
+    let height = 1080;
 
-    let mut file = File::create("screenshot.raw")?;
-    file.write_all(&buffer)?;
+    // Read the raw file into a buffer
+    let mut buffer = vec![0u8; width * height * 4];
+    let mut file = File::open("screenshot.raw")?;
+    file.read_exact(&mut buffer)?;
 
-    println!("Screenshot saved to screenshot.raw");
+    // Create an image buffer from the raw data
+    let img_buffer: ImageBuffer<Rgba<u8>, _> = ImageBuffer::from_raw(width as u32, height as u32, buffer)
+        .expect("Failed to create ImageBuffer");
+
+    // Save the image as a PNG file to the /home/pi directory
+    img_buffer.save("/home/pi/screenshot.png").expect("Failed to save PNG");
+
+    println!("Converted screenshot.raw to /home/pi/screenshot.png");
 
     Ok(())
 }
