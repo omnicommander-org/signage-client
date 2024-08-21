@@ -317,35 +317,34 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 }
 
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
-    env::set_var("DISPLAY", ":0");
-    env::set_var("XDG_RUNTIME_DIR", "/run/user/1000");
-    println!("Taking screenshot");
+   // Set the necessary environment variables
+   env::set_var("DISPLAY", ":0");
+   env::set_var("XDG_RUNTIME_DIR", "/run/user/1000");
 
-    // Start the socat process to interact with the mpv IPC server
-    let mut child = Command::new("socat")
-        .arg("-")
-        .arg("/tmp/mpvsocket")
-        .stdin(std::process::Stdio::piped())
-        .spawn()?;
+   // Run the ffmpeg command to capture the screenshot
+   let output = Command::new("ffmpeg")
+       .arg("-f")
+       .arg("x11grab")
+       .arg("-video_size")
+       .arg("1920x1080")
+       .arg("-i")
+       .arg(":0.0")
+       .arg("-frames:v")
+       .arg("1")
+       .arg("/home/pi/screenshot.png")
+       .output()
+       .await?;
+   
+   // Check if the command was successful
+   if output.status.success() {
+       println!("Screenshot saved to /home/pi/screenshot.png");
+   } else {
+       eprintln!(
+           "Failed to take screenshot: {}",
+           String::from_utf8_lossy(&output.stderr)
+       );
+   }
 
-    // Send the screenshot command to the mpv IPC server
-    if let Some(stdin) = child.stdin.as_mut() {
-        let ipc_command = r#"{ "command": ["screenshot"] }"#;
-        stdin.write_all(ipc_command.as_bytes()).await?;
-    }
-
-    // Wait for the socat process to complete
-    let output = child.wait_with_output().await?;
-
-    if output.status.success() {
-        println!("Screenshot command sent successfully");
-    } else {
-        eprintln!(
-            "Failed to take screenshot: {}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-    }
-
-    Ok(())
+   Ok(())
 }
 
