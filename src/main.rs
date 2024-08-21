@@ -316,23 +316,25 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 
 
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
-    let output = Command::new("/usr/bin/mpv") 
-    .arg("--screenshot-directory=/home/pi")
-    .arg("--screenshot-format=png")
-    .arg("--screenshot")
-    .arg("--no-terminal") 
-    .env("DISPLAY", ":0") 
-    .output()
-    .await?;
+    env::set_var("DISPLAY", ":0");
+    env::set_var("XDG_RUNTIME_DIR", "/run/user/0"); // Directory for root
 
-if output.status.success() {
-    println!("Screenshot saved to /home/pi");
-} else {
-    eprintln!(
-        "Failed to take screenshot: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-}
+    let output = Command::new("/usr/bin/mpv") // Use full path if necessary
+        .arg("--screenshot-directory=/home/pi")
+        .arg("--screenshot-format=png")
+        .arg("--screenshot")
+        .arg("--no-terminal")
+        .output()
+        .await?;
 
-Ok(())
+    if output.status.success() {
+        println!("Screenshot saved to /home/pi");
+    } else {
+        eprintln!(
+            "Failed to take screenshot: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    Ok(())
 }
