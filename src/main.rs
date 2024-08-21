@@ -153,6 +153,7 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
         .arg("--volume=-1")
         .arg("--no-terminal")
         .arg("--fullscreen")
+        .arg("--input-ipc-server=/tmp/mpvsocket")  // Add IPC server argument
         .arg(format!("--image-display-duration={}", image_display_duration))
         .arg(format!("--playlist={}/.local/share/signage/playlist.txt", std::env::var("HOME")?))
         .spawn()?;
@@ -259,6 +260,7 @@ pub struct ClientActions {
     pub restart: bool,
     pub screenshot: bool,
 }
+
 async fn get_client_actions(client: &Client, config: &Config) -> Option<ClientActions> {
     let res = client
         .get(format!("{}/client-actions/{}", config.url, config.id))
@@ -314,23 +316,25 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
     }
 }
 
-
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
     env::set_var("DISPLAY", ":0");
     env::set_var("XDG_RUNTIME_DIR", "/run/user/1000");
     println!("Taking screenshot");
-    let output = Command::new("/usr/bin/mpv") // Use full path if necessary
-        .arg("--screenshot-directory=/home/pi")
-        .arg("--screenshot-format=png")
-        .arg("--screenshot")
-        .arg("--no-terminal")
+    
+    let output = Command::new("socat")
+        .arg("-")
+        .arg("/tmp/mpvsocket")
+        .stdin(std::process::Stdio::piped())
         .output()
         .await?;
 
-    println!("Screenshot output: {:?}",  output);
-
     if output.status.success() {
-        println!("Screenshot saved to /home/pi");
+        let ipc_command = r#"{ "command": ["screenshot"] }"#;
+        if let Some(mut stdin) = output.stdin.take() {
+            stdin.write_all(ipc_command.as_bytes()).await?;
+        }
+
+        println!("Screenshot command sent successfully");
     } else {
         eprintln!(
             "Failed to take screenshot: {}",
