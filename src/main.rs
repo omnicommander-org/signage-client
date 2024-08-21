@@ -3,8 +3,6 @@ use config::Config;
 use data::Data;
 use reqwest::{Client, StatusCode};
 use std::{boxed::Box, error::Error, path::Path};
-use x11::xlib;
-use std::ptr;
 use screenshots::Screen;
 use image::{ImageBuffer, RgbaImage};
 use tokio::process::{Child, Command};
@@ -15,6 +13,8 @@ use util::{set_display, cleanup_directory, Apikey, Updated, Video};
 use reporting::{collect_and_write_metrics, send_metrics};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use std::fs::File;
+use std::io::{Read, Write};
 
 mod reporting;
 mod config;
@@ -320,25 +320,14 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 
 
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
-    std::env::set_var("DISPLAY", ":0");
+    let mut buffer = vec![0u8; 1920 * 1080 * 4];
+    let mut framebuffer = File::open("/dev/fb0")?;
+    framebuffer.read_exact(&mut buffer)?;
 
-    println!("Taking screenshot...");
+    let mut file = File::create("screenshot.raw")?;
+    file.write_all(&buffer)?;
 
-    let screens = Screen::all()?;
-    let screen = &screens[0];
-    let image = screen.capture()?;
-    let width = image.width();
-    let height = image.height();
-    let buffer = image.to_vec(); // Get the raw pixel data as Vec<u8>
+    println!("Screenshot saved to screenshot.raw");
 
-    // Convert the buffer to an image
-    let img_buffer: RgbaImage = ImageBuffer::from_raw(width as u32, height as u32, buffer)
-        .ok_or("Failed to create image buffer")?;
-
-    // Save the image
-    let path = Path::new("/home/pi/screenshot/new_screenshot.png");
-    img_buffer.save(path)?;
-
-    println!("Screenshot saved successfully.");
     Ok(())
 }
