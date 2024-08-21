@@ -11,9 +11,6 @@ use util::{set_display, cleanup_directory, Apikey, Updated, Video};
 use reporting::{collect_and_write_metrics, send_metrics};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use std::fs::File;
-use std::io::{Read, Write};
-use image::{ImageBuffer, Rgba};
 
 mod reporting;
 mod config;
@@ -320,15 +317,21 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
     let output = Command::new("mpv")
-        .arg("--screenshot-directory=/home/pi")
-        .arg("--screenshot-format=png")
-        .arg("--screenshot")
-        .arg("--no-terminal") // run without opening a new terminal
-        .spawn()
-        .expect("Failed to take screenshot");
+    .arg("--screenshot-directory=/home/pi")
+    .arg("--screenshot-format=png")
+    .arg("--screenshot")
+    .arg("--no-terminal") // run without opening a new terminal
+    .output()
+    .await?; // Await the completion of the command
 
-    output.wait_with_output()?;
-
+if output.status.success() {
     println!("Screenshot saved to /home/pi");
-    Ok(())
+} else {
+    eprintln!(
+        "Failed to take screenshot: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+Ok(())
 }
