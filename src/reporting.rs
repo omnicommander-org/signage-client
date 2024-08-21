@@ -89,7 +89,7 @@ pub fn send_metrics(client_id: &str, metrics: &Metrics, api_key: &str, config: &
     let url = format!("{}/client_vitals/{}", config.url, client_id);
     
     // Print the URL for debugging
-    println!("Sending metrics to URL: {}", url);
+    println!("Sending metrics to daddy");
 
     let mut headers = HeaderMap::new();
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
