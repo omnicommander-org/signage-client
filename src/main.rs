@@ -318,7 +318,7 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
     env::set_var("DISPLAY", ":0");
-    env::set_var("XDG_RUNTIME_DIR", "/run/user/0"); // Directory for root
+    env::set_var("XDG_RUNTIME_DIR", "/run/user/1000");
 
     let output = Command::new("/usr/bin/mpv") // Use full path if necessary
         .arg("--screenshot-directory=/home/pi")
