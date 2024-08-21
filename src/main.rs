@@ -3,6 +3,8 @@ use config::Config;
 use data::Data;
 use reqwest::{Client, StatusCode};
 use std::{boxed::Box, error::Error, path::Path};
+use x11::xlib;
+use std::ptr;
 use screenshots::Screen;
 use image::{ImageBuffer, RgbaImage};
 use tokio::process::{Child, Command};
@@ -318,23 +320,23 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 
 
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
-    println!("Taking screenshot...");
+    unsafe {
+        let display = xlib::XOpenDisplay(ptr::null());
+        let screen = xlib::XDefaultScreen(display);
+        let root_window = xlib::XRootWindow(display, screen);
 
-    let screens = Screen::all()?;
-    let screen = &screens[0];
-    let image = screen.capture()?;
-    let width = image.width();
-    let height = image.height();
-    let buffer = image.to_vec(); // Get the raw pixel data as Vec<u8>
+        let width = xlib::XDisplayWidth(display, screen) as u32;
+        let height = xlib::XDisplayHeight(display, screen) as u32;
 
-    // Convert the buffer to an image
-    let img_buffer: RgbaImage = ImageBuffer::from_raw(width as u32, height as u32, buffer)
-        .ok_or("Failed to create image buffer")?;
+        let image = xlib::XGetImage(display, root_window, 0, 0, width, height, !0, xlib::ZPixmap);
 
-    // Save the image
-    let path = Path::new("/home/pi/screenshot/new_screenshot.png");
-    img_buffer.save(path)?;
+        let data = std::slice::from_raw_parts((*image).data as *const u8, (width * height * 4) as usize);
+        let buffer: ImageBuffer<Rgba<u8>, _> = ImageBuffer::from_raw(width, height, data.to_vec()).unwrap();
 
-    println!("Screenshot saved successfully.");
+        buffer.save("/home/pi/screenshot.png")?;
+
+        xlib::XDestroyImage(image);
+        xlib::XCloseDisplay(display);
+    }
     Ok(())
 }
