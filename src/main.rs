@@ -316,13 +316,13 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 
 
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
-    let output = Command::new("mpv")
+    let output = Command::new("/usr/bin/mpv") // Use full path if necessary
     .arg("--screenshot-directory=/home/pi")
     .arg("--screenshot-format=png")
     .arg("--screenshot")
-    .arg("--no-terminal") // run without opening a new terminal
+    .arg("--no-terminal") // Run without opening a new terminal
     .output()
-    .await?; // Await the completion of the command
+    .await?;
 
 if output.status.success() {
     println!("Screenshot saved to /home/pi");
