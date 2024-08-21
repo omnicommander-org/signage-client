@@ -327,8 +327,8 @@ async fn take_screenshot() -> Result<(), Box<dyn Error>> {
         .output()
         .await?;
 
-    println!("Screenshot output: {}",  output);
-    
+    println!("Screenshot output: {:?}",  output);
+
     if output.status.success() {
         println!("Screenshot saved to /home/pi");
     } else {
