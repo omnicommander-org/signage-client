@@ -319,22 +319,16 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 
 
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
-    let width = 1920;
-    let height = 1080;
+    let output = Command::new("mpv")
+        .arg("--screenshot-directory=/home/pi")
+        .arg("--screenshot-format=png")
+        .arg("--screenshot")
+        .arg("--no-terminal") // run without opening a new terminal
+        .spawn()
+        .expect("Failed to take screenshot");
 
-    // Read the raw file into a buffer
-    let mut buffer = vec![0u8; width * height * 4];
-    let mut file = File::open("screenshot.raw")?;
-    file.read_exact(&mut buffer)?;
+    output.wait_with_output()?;
 
-    // Create an image buffer from the raw data
-    let img_buffer: ImageBuffer<Rgba<u8>, _> = ImageBuffer::from_raw(width as u32, height as u32, buffer)
-        .expect("Failed to create ImageBuffer");
-
-    // Save the image as a PNG file to the /home/pi directory
-    img_buffer.save("/home/pi/screenshot.png").expect("Failed to save PNG");
-
-    println!("Converted screenshot.raw to /home/pi/screenshot.png");
-
+    println!("Screenshot saved to /home/pi");
     Ok(())
 }
