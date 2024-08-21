@@ -5,8 +5,7 @@ use reqwest::{Client, StatusCode};
 use std::{boxed::Box, error::Error, path::Path};
 use x11::xlib;
 use std::ptr;
-use screenshots::Screen;
-use image::{ImageBuffer, RgbaImage};
+
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
@@ -15,7 +14,7 @@ use util::{set_display, cleanup_directory, Apikey, Updated, Video};
 use reporting::{collect_and_write_metrics, send_metrics};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
+use image::{ImageBuffer, Rgba};
 mod reporting;
 mod config;
 mod data;
@@ -322,6 +321,10 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
     unsafe {
         let display = xlib::XOpenDisplay(ptr::null());
+        if display.is_null() {
+            return Err("Unable to open X display".into());
+        }
+
         let screen = xlib::XDefaultScreen(display);
         let root_window = xlib::XRootWindow(display, screen);
 
@@ -329,9 +332,15 @@ async fn take_screenshot() -> Result<(), Box<dyn Error>> {
         let height = xlib::XDisplayHeight(display, screen) as u32;
 
         let image = xlib::XGetImage(display, root_window, 0, 0, width, height, !0, xlib::ZPixmap);
+        if image.is_null() {
+            xlib::XCloseDisplay(display);
+            return Err("Unable to capture screen image".into());
+        }
 
         let data = std::slice::from_raw_parts((*image).data as *const u8, (width * height * 4) as usize);
-        let buffer: ImageBuffer<Rgba<u8>, _> = ImageBuffer::from_raw(width, height, data.to_vec()).unwrap();
+        let buffer: ImageBuffer<Rgba<u8>, _> = ImageBuffer::from_raw(width, height, data.to_vec())
+            .ok_or("Failed to create image buffer")?;
+
         buffer.save("/home/pi/screenshot.png")?;
 
         xlib::XDestroyImage(image);
@@ -339,3 +348,4 @@ async fn take_screenshot() -> Result<(), Box<dyn Error>> {
     }
     Ok(())
 }
+
