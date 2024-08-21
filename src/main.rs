@@ -5,7 +5,8 @@ use reqwest::{Client, StatusCode};
 use std::{boxed::Box, error::Error, path::Path};
 use x11::xlib;
 use std::ptr;
-
+use screenshots::Screen;
+use image::{ImageBuffer, RgbaImage};
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
@@ -14,7 +15,7 @@ use util::{set_display, cleanup_directory, Apikey, Updated, Video};
 use reporting::{collect_and_write_metrics, send_metrics};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use image::{ImageBuffer, Rgba};
+
 mod reporting;
 mod config;
 mod data;
@@ -319,33 +320,25 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
 
 
 async fn take_screenshot() -> Result<(), Box<dyn Error>> {
-    unsafe {
-        let display = xlib::XOpenDisplay(ptr::null());
-        if display.is_null() {
-            return Err("Unable to open X display".into());
-        }
+    std::env::set_var("DISPLAY", ":0");
 
-        let screen = xlib::XDefaultScreen(display);
-        let root_window = xlib::XRootWindow(display, screen);
+    println!("Taking screenshot...");
 
-        let width = xlib::XDisplayWidth(display, screen) as u32;
-        let height = xlib::XDisplayHeight(display, screen) as u32;
+    let screens = Screen::all()?;
+    let screen = &screens[0];
+    let image = screen.capture()?;
+    let width = image.width();
+    let height = image.height();
+    let buffer = image.to_vec(); // Get the raw pixel data as Vec<u8>
 
-        let image = xlib::XGetImage(display, root_window, 0, 0, width, height, !0, xlib::ZPixmap);
-        if image.is_null() {
-            xlib::XCloseDisplay(display);
-            return Err("Unable to capture screen image".into());
-        }
+    // Convert the buffer to an image
+    let img_buffer: RgbaImage = ImageBuffer::from_raw(width as u32, height as u32, buffer)
+        .ok_or("Failed to create image buffer")?;
 
-        let data = std::slice::from_raw_parts((*image).data as *const u8, (width * height * 4) as usize);
-        let buffer: ImageBuffer<Rgba<u8>, _> = ImageBuffer::from_raw(width, height, data.to_vec())
-            .ok_or("Failed to create image buffer")?;
+    // Save the image
+    let path = Path::new("/home/pi/screenshot/new_screenshot.png");
+    img_buffer.save(path)?;
 
-        buffer.save("/home/pi/screenshot.png")?;
-
-        xlib::XDestroyImage(image);
-        xlib::XCloseDisplay(display);
-    }
+    println!("Screenshot saved successfully.");
     Ok(())
 }
-
