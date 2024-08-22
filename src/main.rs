@@ -358,7 +358,7 @@ async fn take_screenshot(client: &Client, config: &Config) -> Result<(), Box<dyn
 }
 
 async fn update_screenshot_flag(client: &Client, config: &Config) -> Result<(), Box<dyn Error>> {
-    let url = format!("{}/update-screenshot/{}", config.url, config.id);
+    let url = format!("{}/update-screenshot-device/{}", config.url, config.id);
     println!("Updating screenshot flag at URL: {}", url);
     let response = client
         .post(&url)
