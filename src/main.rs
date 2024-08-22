@@ -328,11 +328,26 @@ async fn take_screenshot(client: &Client, config: &Config) -> Result<(), Box<dyn
 
     let screenshot_path = "/home/pi/screenshot.png";
 
+    // Get the screen resolution dynamically using `xdpyinfo`
+    let resolution_output = Command::new("xdpyinfo")
+        .arg("|")
+        .arg("grep")
+        .arg("dimensions")
+        .output()
+        .expect("Failed to execute xdpyinfo");
+
+    let resolution_str = str::from_utf8(&resolution_output.stdout)?;
+    let resolution = resolution_str
+        .split_whitespace()
+        .nth(1)
+        .ok_or("Failed to parse resolution")?;
+
+    // Use the resolution in the ffmpeg command
     let output = Command::new("ffmpeg")
         .arg("-f")
         .arg("x11grab")
         .arg("-video_size")
-        .arg("1920x1080")
+        .arg(resolution)
         .arg("-i")
         .arg(":0.0")
         .arg("-frames:v")
