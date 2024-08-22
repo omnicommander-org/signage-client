@@ -16,6 +16,7 @@ use uuid::Uuid;
 use std::env;
 use std::fs::File;
 use std::io::Read;
+use std::str;
 
 mod reporting;
 mod config;
@@ -334,9 +335,10 @@ async fn take_screenshot(client: &Client, config: &Config) -> Result<(), Box<dyn
         .arg("grep")
         .arg("dimensions")
         .output()
+        .await
         .expect("Failed to execute xdpyinfo");
 
-    let resolution_str = str::from_utf8(&resolution_output.stdout)?;
+    let resolution_str = std::str::from_utf8(&resolution_output.stdout)?;
     let resolution = resolution_str
         .split_whitespace()
         .nth(1)
