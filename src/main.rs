@@ -353,28 +353,23 @@ async fn take_screenshot(client: &Client, config: &Config) -> Result<(), Box<dyn
     Ok(())
 }
 
-
-async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &str) -> Result<(), Box<dyn Error>> {
-    let url = format!("{}/upload-screenshot/{}", config.url, config.id);
-
-    let form = reqwest::multipart::Form::new()
-        .file("file", screenshot_path)?;
-
+async fn update_screenshot_flag(client: &Client, config: &Config) -> Result<(), Box<dyn Error>> {
+    let url = format!("{}/update-screenshot/{}", config.url, config.id);
     let response = client
         .post(&url)
         .header("APIKEY", config.key.clone().unwrap_or_default())
-        .multipart(form)
+        .json(&json!({ "screenshot": false }))
         .send()
         .await?;
 
     if response.status().is_success() {
-        println!("Screenshot successfully uploaded.");
-        update_screenshot_flag(client, config).await?;
+        println!("Screenshot flag successfully updated.");
         Ok(())
     } else {
-        Err(format!("Failed to upload screenshot: {:?}", response.status()).into())
+        Err(format!("Failed to update screenshot flag: {:?}", response.status()).into())
     }
 }
+
 
 async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &str) -> Result<(), Box<dyn Error>> {
     let url = format!("{}/upload-screenshot/{}", config.url, config.id);
