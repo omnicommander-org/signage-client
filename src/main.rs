@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use config::Config;
 use data::Data;
 use reqwest::{Client, StatusCode};
+use reqwest::multipart::{Form, Part};
 use std::{boxed::Box, error::Error, path::Path};
 use std::fs;
 use tokio::process::{Child, Command};
@@ -14,6 +15,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
 use std::env;
+use std::fs::File;
+use std::io::Read;
 
 mod reporting;
 mod config;
