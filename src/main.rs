@@ -378,8 +378,15 @@ async fn update_screenshot_flag(client: &Client, config: &Config) -> Result<(), 
 async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &str) -> Result<(), Box<dyn Error>> {
     let url = format!("{}/upload-screenshot/{}", config.url, config.id);
 
-    let form = reqwest::multipart::Form::new()
-        .file("file", screenshot_path)?;
+    let mut file = File::open(screenshot_path)?;
+    let mut buffer = Vec::new();
+    file.read_to_end(&mut buffer)?;
+
+    let part = Part::bytes(buffer)
+        .file_name("screenshot.png")
+        .mime_str("image/png")?;
+
+    let form = Form::new().part("file", part);
 
     let response = client
         .post(&url)
@@ -392,7 +399,7 @@ async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &s
         println!("Screenshot successfully uploaded.");
 
         // Delete the screenshot file from the device
-        if let Err(e) = fs::remove_file(screenshot_path) {
+        if let Err(e) = std::fs::remove_file(screenshot_path) {
             eprintln!("Failed to delete screenshot: {}", e);
         } else {
             println!("Screenshot deleted from device.");
@@ -404,3 +411,4 @@ async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &s
         Err(format!("Failed to upload screenshot: {:?}", response.status()).into())
     }
 }
+
