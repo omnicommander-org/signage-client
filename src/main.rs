@@ -316,35 +316,77 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
     }
 }
 
-async fn take_screenshot() -> Result<(), Box<dyn Error>> {
-   // Set the necessary environment variables
-   env::set_var("DISPLAY", ":0");
-   env::set_var("XDG_RUNTIME_DIR", "/run/user/1000");
+async fn take_screenshot(client: &Client, config: &Config) -> Result<(), Box<dyn Error>> {
+    env::set_var("DISPLAY", ":0");
+    env::set_var("XDG_RUNTIME_DIR", "/run/user/1000");
 
-   // Run the ffmpeg command to capture the screenshot
-   let output = Command::new("ffmpeg")
-       .arg("-f")
-       .arg("x11grab")
-       .arg("-video_size")
-       .arg("1920x1080")
-       .arg("-i")
-       .arg(":0.0")
-       .arg("-frames:v")
-       .arg("1")
-       .arg("/home/pi/screenshot.png")
-       .output()
-       .await?;
-   
-   // Check if the command was successful
-   if output.status.success() {
-       println!("Screenshot saved to /home/pi/screenshot.png");
-   } else {
-       eprintln!(
-           "Failed to take screenshot: {}",
-           String::from_utf8_lossy(&output.stderr)
-       );
-   }
+    let screenshot_path = "/home/pi/screenshot.png";
 
-   Ok(())
+    let output = Command::new("ffmpeg")
+        .arg("-f")
+        .arg("x11grab")
+        .arg("-video_size")
+        .arg("1920x1080")
+        .arg("-i")
+        .arg(":0.0")
+        .arg("-frames:v")
+        .arg("1")
+        .arg(screenshot_path)
+        .output()
+        .await?;
+    
+    if output.status.success() {
+        println!("Screenshot saved to {}", screenshot_path);
+        // Call the upload_screenshot function after taking the screenshot
+        if let Err(e) = upload_screenshot(client, config, screenshot_path).await {
+            eprintln!("Failed to upload screenshot: {}", e);
+        }
+    } else {
+        eprintln!(
+            "Failed to take screenshot: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    Ok(())
 }
 
+
+async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &str) -> Result<(), Box<dyn Error>> {
+    let url = format!("{}/upload-screenshot/{}", config.url, config.id);
+
+    let form = reqwest::multipart::Form::new()
+        .file("file", screenshot_path)?;
+
+    let response = client
+        .post(&url)
+        .header("APIKEY", config.key.clone().unwrap_or_default())
+        .multipart(form)
+        .send()
+        .await?;
+
+    if response.status().is_success() {
+        println!("Screenshot successfully uploaded.");
+        update_screenshot_flag(client, config).await?;
+        Ok(())
+    } else {
+        Err(format!("Failed to upload screenshot: {:?}", response.status()).into())
+    }
+}
+
+async fn update_screenshot_flag(client: &Client, config: &Config) -> Result<(), Box<dyn Error>> {
+    let url = format!("{}/update-screenshot/{}", config.url, config.id);
+    let response = client
+        .post(&url)
+        .header("APIKEY", config.key.clone().unwrap_or_default())
+        .json(&json!({ "screenshot": false }))
+        .send()
+        .await?;
+
+    if response.status().is_success() {
+        println!("Screenshot flag successfully updated.");
+        Ok(())
+    } else {
+        Err(format!("Failed to update screenshot flag: {:?}", response.status()).into())
+    }
+}
