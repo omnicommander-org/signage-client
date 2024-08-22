@@ -3,13 +3,14 @@ use config::Config;
 use data::Data;
 use reqwest::{Client, StatusCode};
 use std::{boxed::Box, error::Error, path::Path};
+use std::fs;
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
 use tokio::signal::unix::{signal, SignalKind};
 use util::{set_display, cleanup_directory, Apikey, Updated, Video};
 use reporting::{collect_and_write_metrics, send_metrics};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, json};
 use uuid::Uuid;
 use std::env;
 
@@ -99,7 +100,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         restart_device(&client, &config).await;
                     }
                     if actions.screenshot {
-                        if let Err(e) = take_screenshot().await {
+                        // This is where the screenshot is taken and uploaded
+                        if let Err(e) = take_screenshot(&client, &config).await {
                             eprintln!("Failed to take screenshot: {}", e);
                         }
                     }
@@ -374,19 +376,32 @@ async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &s
     }
 }
 
-async fn update_screenshot_flag(client: &Client, config: &Config) -> Result<(), Box<dyn Error>> {
-    let url = format!("{}/update-screenshot/{}", config.url, config.id);
+async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &str) -> Result<(), Box<dyn Error>> {
+    let url = format!("{}/upload-screenshot/{}", config.url, config.id);
+
+    let form = reqwest::multipart::Form::new()
+        .file("file", screenshot_path)?;
+
     let response = client
         .post(&url)
         .header("APIKEY", config.key.clone().unwrap_or_default())
-        .json(&json!({ "screenshot": false }))
+        .multipart(form)
         .send()
         .await?;
 
     if response.status().is_success() {
-        println!("Screenshot flag successfully updated.");
+        println!("Screenshot successfully uploaded.");
+
+        // Delete the screenshot file from the device
+        if let Err(e) = fs::remove_file(screenshot_path) {
+            eprintln!("Failed to delete screenshot: {}", e);
+        } else {
+            println!("Screenshot deleted from device.");
+        }
+
+        update_screenshot_flag(client, config).await?;
         Ok(())
     } else {
-        Err(format!("Failed to update screenshot flag: {:?}", response.status()).into())
+        Err(format!("Failed to upload screenshot: {:?}", response.status()).into())
     }
 }
