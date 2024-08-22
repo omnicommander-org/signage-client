@@ -306,6 +306,7 @@ async fn restart_device(client: &Client, config: &Config) {
 
 async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
     let url = format!("{}/update-restart-device/{}", config.url, config.id);
+    println!("Updating screenshot flag at URL: {}", url);
     let response = client
         .post(&url)
         .header("APIKEY", config.key.clone().unwrap_or_default())
