@@ -4,7 +4,6 @@ use data::Data;
 use reqwest::{Client, StatusCode};
 use reqwest::multipart::{Form, Part};
 use std::{boxed::Box, error::Error, path::Path};
-use std::fs;
 use tokio::process::{Child, Command};
 use tokio::time::{self, Duration};
 use tokio::io::AsyncWriteExt;
@@ -405,10 +404,18 @@ async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &s
             println!("Screenshot deleted from device.");
         }
 
-        update_screenshot_flag(client, config).await?;
+        // Debugging statements to track the execution flow
+        println!("Calling update_screenshot_flag...");
+        if let Err(e) = update_screenshot_flag(client, config).await {
+            eprintln!("Failed to update screenshot flag: {}", e);
+        } else {
+            println!("Screenshot flag successfully updated.");
+        }
+
         Ok(())
     } else {
         Err(format!("Failed to upload screenshot: {:?}", response.status()).into())
     }
 }
+
 
