@@ -10,7 +10,8 @@ use tokio::io::AsyncWriteExt;
 use tokio::signal::unix::{signal, SignalKind};
 use util::{set_display, cleanup_directory, Apikey, Updated, Video};
 use reporting::{collect_and_write_metrics, send_metrics};
-use serde::{Deserialize, Serialize, serde_json::json};
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 use uuid::Uuid;
 use std::env;
 
