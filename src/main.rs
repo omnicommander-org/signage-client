@@ -46,7 +46,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let mut interval = time::interval(Duration::from_secs(20));
-    let mut metrics_interval = time::interval(Duration::from_secs(300));
+    let mut metrics_interval = time::interval(Duration::from_secs(30));
     let mut terminate = signal(SignalKind::terminate())?;
     let mut interrupt = signal(SignalKind::interrupt())?;
     let mut hup = signal(SignalKind::hangup())?;
