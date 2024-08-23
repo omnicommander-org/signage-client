@@ -343,11 +343,11 @@ async fn restart_app(client: &Client, config: &Config) {
 
 async fn update_restart_app_flag(client: &Client, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
     let url = format!("{}/update-restart-app-device/{}", config.url, config.id);
-    println!("Updating screenshot flag at URL: {}", url);
+    println!("Updating restart app flag at URL: {}", url);
     let response = client
         .post(&url)
         .header("APIKEY", config.key.clone().unwrap_or_default())
-        .json(&serde_json::json!({ "restart": false }))
+        .json(&serde_json::json!({ "restart_app": false }))
         .send()
         .await?;
     
