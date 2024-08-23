@@ -283,6 +283,79 @@ async fn get_client_actions(client: &Client, config: &Config) -> Option<ClientAc
     }
 }
 
+async fn restart_app(client: &Client, config: &Config) {
+    // Update the restart flag to false
+    let update_result = update_restart_app_flag(client, config).await;
+    
+    if let Err(e) = update_result {
+        println!("Failed to update restart flag: {}", e);
+        return;
+    }
+
+    println!("Restarting Signage Application...");
+
+    // Stop the signaged.service
+    let stop_output = Command::new("sudo")
+        .arg("systemctl")
+        .arg("stop")
+        .arg("signaged.service")
+        .output()
+        .await;
+
+    match stop_output {
+        Ok(output) if output.status.success() => {
+            println!("Signage service stopped successfully.");
+        },
+        Ok(output) => {
+            eprintln!("Failed to stop signage service: {}", String::from_utf8_lossy(&output.stderr));
+            return;
+        },
+        Err(e) => {
+            eprintln!("Failed to execute stop command: {}", e);
+            return;
+        }
+    }
+
+    // Start the signaged.service
+    let start_output = Command::new("sudo")
+        .arg("systemctl")
+        .arg("start")
+        .arg("signaged.service")
+        .output()
+        .await;
+
+    match start_output {
+        Ok(output) if output.status.success() => {
+            println!("Signage service started successfully.");
+        },
+        Ok(output) => {
+            eprintln!("Failed to start signage service: {}", String::from_utf8_lossy(&output.stderr));
+        },
+        Err(e) => {
+            eprintln!("Failed to execute start command: {}", e);
+        }
+    }
+}
+
+
+async fn update_restart_app_flag(client: &Client, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
+    let url = format!("{}/update-restart-app-device/{}", config.url, config.id);
+    println!("Updating screenshot flag at URL: {}", url);
+    let response = client
+        .post(&url)
+        .header("APIKEY", config.key.clone().unwrap_or_default())
+        .json(&serde_json::json!({ "restart": false }))
+        .send()
+        .await?;
+    
+    if response.status().is_success() {
+        println!("Restart App flag successfully updated.");
+        Ok(())
+    } else {
+        Err(format!("Failed to update restart flag: {:?}", response.status()).into())
+    }
+}
+
 async fn restart_device(client: &Client, config: &Config) {
     // Update the restart flag to false
     let update_result = update_restart_flag(client, config).await;
@@ -439,5 +512,4 @@ async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &s
         Err(format!("Failed to upload screenshot: {:?}", response.status()).into())
     }
 }
-
 
