@@ -297,29 +297,45 @@ async fn restart_app(client: &Client, config: &Config) {
 
     println!("Restarting Signage Application...");
 
-    // Stop the signaged.service
-    let stop_output = Command::new("sudo")
+    // Stop the MPV player
+    let stop_mpv_output = Command::new("pkill")
+        .arg("mpv")
+        .output()
+        .await;
+
+    match stop_mpv_output {
+        Ok(output) if output.status.success() => {
+            println!("MPV player stopped successfully.");
+        },
+        Ok(output) => {
+            eprintln!("Failed to stop MPV player: {}", String::from_utf8_lossy(&output.stderr));
+        },
+        Err(e) => {
+            eprintln!("Failed to execute stop MPV command: {}", e);
+        }
+    }
+
+    // Restart the signaged.service
+    let restart_service_output = Command::new("sudo")
         .arg("systemctl")
         .arg("restart")
         .arg("signaged.service")
         .output()
         .await;
 
-    match stop_output {
+    match restart_service_output {
         Ok(output) if output.status.success() => {
             println!("Signage service restarted successfully.");
         },
         Ok(output) => {
-            eprintln!("Failed to stop signage service: {}", String::from_utf8_lossy(&output.stderr));
+            eprintln!("Failed to restart signage service: {}", String::from_utf8_lossy(&output.stderr));
             return;
         },
         Err(e) => {
-            eprintln!("Failed to execute stop command: {}", e);
+            eprintln!("Failed to execute restart command: {}", e);
             return;
         }
     }
-
-    
 }
 
 
