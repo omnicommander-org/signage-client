@@ -265,6 +265,7 @@ async fn update_videos(
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ClientActions {
     pub client_id: Uuid,
+    pub restart_app: bool,
     pub restart: bool,
     pub screenshot: bool,
 }
