@@ -161,6 +161,7 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
         .arg("--volume=-1")
         .arg("--no-terminal")
         .arg("--fullscreen")
+        .arg("--vf=scale=3960:1020")
         .arg("--input-ipc-server=/tmp/mpvsocket")  // Add IPC server argument
         .arg(format!("--image-display-duration={}", image_display_duration))
         .arg(format!("--playlist={}/.local/share/signage/playlist.txt", std::env::var("HOME")?))
