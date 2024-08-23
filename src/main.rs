@@ -100,11 +100,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 // Check client actions
                 let actions = get_client_actions(&client, &config).await;
                 if let Some(actions) = actions {
+                    if actions.restart_app {
+                        restart_app(&client, &config).await;
+                    }
                     if actions.restart {
                         restart_device(&client, &config).await;
                     }
                     if actions.screenshot {
-                        // This is where the screenshot is taken and uploaded
                         if let Err(e) = take_screenshot(&client, &config).await {
                             eprintln!("Failed to take screenshot: {}", e);
                         }
