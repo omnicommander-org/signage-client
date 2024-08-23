@@ -300,14 +300,14 @@ async fn restart_app(client: &Client, config: &Config) {
     // Stop the signaged.service
     let stop_output = Command::new("sudo")
         .arg("systemctl")
-        .arg("stop")
+        .arg("restart")
         .arg("signaged.service")
         .output()
         .await;
 
     match stop_output {
         Ok(output) if output.status.success() => {
-            println!("Signage service stopped successfully.");
+            println!("Signage service restarted successfully.");
         },
         Ok(output) => {
             eprintln!("Failed to stop signage service: {}", String::from_utf8_lossy(&output.stderr));
@@ -319,25 +319,7 @@ async fn restart_app(client: &Client, config: &Config) {
         }
     }
 
-    // Start the signaged.service
-    let start_output = Command::new("sudo")
-        .arg("systemctl")
-        .arg("start")
-        .arg("signaged.service")
-        .output()
-        .await;
-
-    match start_output {
-        Ok(output) if output.status.success() => {
-            println!("Signage service started successfully.");
-        },
-        Ok(output) => {
-            eprintln!("Failed to start signage service: {}", String::from_utf8_lossy(&output.stderr));
-        },
-        Err(e) => {
-            eprintln!("Failed to execute start command: {}", e);
-        }
-    }
+    
 }
 
 
