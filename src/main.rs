@@ -160,6 +160,7 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
         .arg("--loop-playlist=inf")
         .arg("--volume=-1")
         .arg("--no-terminal")
+        .arg("video-aspect=32:9")
         .arg("--fullscreen")
         .arg("--vf=scale=3960:1020")
         .arg("--input-ipc-server=/tmp/mpvsocket")  // Add IPC server argument
