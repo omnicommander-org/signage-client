@@ -474,7 +474,7 @@ async fn update_screenshot_flag(client: &Client, config: &Config) -> Result<(), 
 
 async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &str) -> Result<(), Box<dyn Error>> {
     let url = format!("{}/upload-screenshot/{}", config.url, config.id);
-
+    println!("Generated URL: {}", url);
     let mut file = File::open(screenshot_path)?;
     let mut buffer = Vec::new();
     file.read_to_end(&mut buffer)?;
