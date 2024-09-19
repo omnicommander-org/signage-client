@@ -1,26 +1,26 @@
 use chrono::{DateTime, Utc};
 use config::Config;
 use data::Data;
-use reqwest::{Client, StatusCode};
-use reqwest::multipart::{Form, Part};
-use std::{boxed::Box, error::Error, path::Path};
-use tokio::process::{Child, Command};
-use tokio::time::{self, Duration};
-use tokio::io::AsyncWriteExt;
-use tokio::signal::unix::{signal, SignalKind};
-use util::{set_display, cleanup_directory, Apikey, Updated, Video};
 use reporting::{collect_and_write_metrics, send_metrics};
+use reqwest::multipart::{Form, Part};
+use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use uuid::Uuid;
 use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::str;
+use std::{boxed::Box, error::Error, path::Path};
+use tokio::io::AsyncWriteExt;
+use tokio::process::{Child, Command};
+use tokio::signal::unix::{signal, SignalKind};
+use tokio::time::{self, Duration};
+use util::{cleanup_directory, set_display, Apikey, Updated, Video};
+use uuid::Uuid;
 
-mod reporting;
 mod config;
 mod data;
+mod reporting;
 mod util;
 
 #[tokio::main]
@@ -37,6 +37,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("Loading data...");
     data.load().await?;
 
+    let mut mpv = start_mpv().await?;
+
     let _ = wait_for_api(&client, &config).await?;
 
     println!("API key is not set. Requesting a new API key...");
@@ -47,7 +49,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if data.last_update.is_none() {
         let updated = sync(&client, &config).await?;
         update_videos(&client, &mut config, &mut data, updated).await?;
-        println!("Data Updated: {:?}", updated);    
+        println!("Data Updated: {:?}", updated);
     }
 
     let mut interval = time::interval(Duration::from_secs(20));
@@ -56,14 +58,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut interrupt = signal(SignalKind::interrupt())?;
     let mut hup = signal(SignalKind::hangup())?;
 
-    let mut mpv = start_mpv().await?;
     mpv.kill().await?;
+
     loop {
         tokio::select! {
             _ = interval.tick() => {
                 let updated = sync(&client, &config).await?;
                 if let (Some(updated), Some(last_update)) = (updated, data.last_update) {
-                
+
                     if updated > last_update {
                         println!("Update Videos");
                         update_videos(&client, &mut config, &mut data, Some(updated)).await?;
@@ -134,7 +136,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-
 async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn Error>> {
     let mut interval = time::interval(Duration::from_secs(1));
     loop {
@@ -145,7 +146,7 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
                 StatusCode::INTERNAL_SERVER_ERROR => {
                     println!("Server error. Retrying in 2 minutes...");
                     time::interval(Duration::from_secs(120)).tick().await;
-                },
+                }
                 _ => (),
             }
         }
@@ -163,9 +164,15 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
         .arg("video-aspect=32:9")
         .arg("--fullscreen")
         .arg("--vf=scale=3960:1020")
-        .arg("--input-ipc-server=/tmp/mpvsocket")  // Add IPC server argument
-        .arg(format!("--image-display-duration={}", image_display_duration))
-        .arg(format!("--playlist={}/.local/share/signage/playlist.txt", std::env::var("HOME")?))
+        .arg("--input-ipc-server=/tmp/mpvsocket") // Add IPC server argument
+        .arg(format!(
+            "--image-display-duration={}",
+            image_display_duration
+        ))
+        .arg(format!(
+            "--playlist={}/.local/share/signage/playlist.txt",
+            std::env::var("HOME")?
+        ))
         .spawn()?;
 
     Ok(child)
@@ -175,6 +182,7 @@ async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box
     println!("Loading configuration...");
     config.load().await?;
     println!("{}/get-new-key/{}", config.url, config.id);
+
     let res: Apikey = client
         .get(format!("{}/get-new-key/{}", config.url, config.id))
         .basic_auth(&config.username, Some(&config.password))
@@ -201,7 +209,10 @@ async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>,
     Ok(res.updated)
 }
 
-async fn receive_videos(client: &Client, config: &mut Config) -> Result<Vec<Video>, Box<dyn Error>> {
+async fn receive_videos(
+    client: &Client,
+    config: &mut Config,
+) -> Result<Vec<Video>, Box<dyn Error>> {
     let url = format!("{}/recieve-videos/{}", config.url, config.id);
 
     // Request a new authorization token
@@ -258,7 +269,8 @@ async fn update_videos(
         // Download the video and get the file path
         let file_path = video.download(client).await?;
         // Write the path to the playlist file
-        file.write_all(format!("{}\n", file_path).as_bytes()).await?;
+        file.write_all(format!("{}\n", file_path).as_bytes())
+            .await?;
     }
     cleanup_directory(&format!("{}/.local/share/signage", home)).await?;
     Ok(())
@@ -291,7 +303,7 @@ async fn get_client_actions(client: &Client, config: &Config) -> Option<ClientAc
 async fn restart_app(client: &Client, config: &Config) {
     // Update the restart flag to false
     let update_result = update_restart_app_flag(client, config).await;
-    
+
     if let Err(e) = update_result {
         println!("Failed to update restart flag: {}", e);
         return;
@@ -300,18 +312,18 @@ async fn restart_app(client: &Client, config: &Config) {
     println!("Restarting Signage Application...");
 
     // Stop the MPV player
-    let stop_mpv_output = Command::new("pkill")
-        .arg("mpv")
-        .output()
-        .await;
+    let stop_mpv_output = Command::new("pkill").arg("mpv").output().await;
 
     match stop_mpv_output {
         Ok(output) if output.status.success() => {
             println!("MPV player stopped successfully.");
-        },
+        }
         Ok(output) => {
-            eprintln!("Failed to stop MPV player: {}", String::from_utf8_lossy(&output.stderr));
-        },
+            eprintln!(
+                "Failed to stop MPV player: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
         Err(e) => {
             eprintln!("Failed to execute stop MPV command: {}", e);
         }
@@ -328,11 +340,14 @@ async fn restart_app(client: &Client, config: &Config) {
     match restart_service_output {
         Ok(output) if output.status.success() => {
             println!("Signage service restarted successfully.");
-        },
+        }
         Ok(output) => {
-            eprintln!("Failed to restart signage service: {}", String::from_utf8_lossy(&output.stderr));
+            eprintln!(
+                "Failed to restart signage service: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
             return;
-        },
+        }
         Err(e) => {
             eprintln!("Failed to execute restart command: {}", e);
             return;
@@ -340,8 +355,10 @@ async fn restart_app(client: &Client, config: &Config) {
     }
 }
 
-
-async fn update_restart_app_flag(client: &Client, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
+async fn update_restart_app_flag(
+    client: &Client,
+    config: &Config,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = format!("{}/update-restart-app-device/{}", config.url, config.id);
     println!("Updating restart app flag at URL: {}", url);
     let response = client
@@ -350,7 +367,7 @@ async fn update_restart_app_flag(client: &Client, config: &Config) -> Result<(),
         .json(&serde_json::json!({ "restart_app": false }))
         .send()
         .await?;
-    
+
     if response.status().is_success() {
         println!("Restart App flag successfully updated.");
         Ok(())
@@ -362,17 +379,14 @@ async fn update_restart_app_flag(client: &Client, config: &Config) -> Result<(),
 async fn restart_device(client: &Client, config: &Config) {
     // Update the restart flag to false
     let update_result = update_restart_flag(client, config).await;
-    
+
     if let Err(e) = update_result {
         println!("Failed to update restart flag: {}", e);
         return;
     }
 
     println!("Restarting device...");
-    let status = Command::new("sudo")
-        .arg("reboot")
-        .status()
-        .await;
+    let status = Command::new("sudo").arg("reboot").status().await;
 
     match status {
         Ok(status) if status.success() => println!("Device is restarting..."),
@@ -381,7 +395,10 @@ async fn restart_device(client: &Client, config: &Config) {
     }
 }
 
-async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box<dyn std::error::Error>> {
+async fn update_restart_flag(
+    client: &Client,
+    config: &Config,
+) -> Result<(), Box<dyn std::error::Error>> {
     let url = format!("{}/update-restart-device/{}", config.url, config.id);
     println!("Updating screenshot flag at URL: {}", url);
     let response = client
@@ -390,7 +407,7 @@ async fn update_restart_flag(client: &Client, config: &Config) -> Result<(), Box
         .json(&serde_json::json!({ "restart": false }))
         .send()
         .await?;
-    
+
     if response.status().is_success() {
         println!("Restart flag successfully updated.");
         Ok(())
@@ -436,7 +453,7 @@ async fn take_screenshot(client: &Client, config: &Config) -> Result<(), Box<dyn
         .arg(screenshot_path)
         .output()
         .await?;
-    
+
     if output.status.success() {
         println!("Screenshot saved to {}", screenshot_path);
         // Call the upload_screenshot function after taking the screenshot
@@ -471,8 +488,11 @@ async fn update_screenshot_flag(client: &Client, config: &Config) -> Result<(), 
     }
 }
 
-
-async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &str) -> Result<(), Box<dyn Error>> {
+async fn upload_screenshot(
+    client: &Client,
+    config: &Config,
+    screenshot_path: &str,
+) -> Result<(), Box<dyn Error>> {
     let url = format!("{}/upload-screenshot/{}", config.url, config.id);
     println!("Generated URL: {}", url);
     let mut file = File::open(screenshot_path)?;
@@ -515,4 +535,3 @@ async fn upload_screenshot(client: &Client, config: &Config, screenshot_path: &s
         Err(format!("Failed to upload screenshot: {:?}", response.status()).into())
     }
 }
-
