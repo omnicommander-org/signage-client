@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{format, DateTime, Utc};
 use config::Config;
 use data::Data;
 use reqwest::{Client, StatusCode};
@@ -37,6 +37,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("Loading data...");
     data.load().await?;
 
+    let mut mpv = start_mpv().await?;
+
     let _ = wait_for_api(&client, &config).await?;
 
     println!("API key is not set. Requesting a new API key...");
@@ -56,8 +58,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut interrupt = signal(SignalKind::interrupt())?;
     let mut hup = signal(SignalKind::hangup())?;
 
-    let mut mpv = start_mpv().await?;
     mpv.kill().await?;
+
     loop {
         tokio::select! {
             _ = interval.tick() => {
@@ -175,6 +177,7 @@ async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box
     println!("Loading configuration...");
     config.load().await?;
     println!("{}/get-new-key/{}", config.url, config.id);
+
     let res: Apikey = client
         .get(format!("{}/get-new-key/{}", config.url, config.id))
         .basic_auth(&config.username, Some(&config.password))
