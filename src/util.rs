@@ -4,11 +4,11 @@ use futures_util::StreamExt;
 use reqwest::Client;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{boxed::Box, error::Error, path::Path};
+use tokio::process::Command;
 use tokio::{
     fs::{self, File},
     io::{AsyncReadExt, AsyncWriteExt},
 };
-use tokio::process::Command;
 
 use std::env;
 
@@ -33,10 +33,12 @@ impl Video {
     pub async fn download(&self, client: &Client) -> Result<String, Box<dyn std::error::Error>> {
         // Extract the file extension from the URL
         let path = Path::new(&self.asset_url);
-        let extension = path.extension().and_then(std::ffi::OsStr::to_str).unwrap_or("bin");
+        let extension = path
+            .extension()
+            .and_then(std::ffi::OsStr::to_str)
+            .unwrap_or("bin");
         // Clean up the directory after a successful download
-        
-        
+
         let file_path = format!(
             "{}/.local/share/signage/{}.{}",
             std::env::var("HOME")?,
@@ -97,13 +99,12 @@ pub async fn load_json<T: Serialize + DeserializeOwned>(
     Ok(())
 }
 
+pub async fn run_command(
+    command: &str,
+    args: &[&str],
+) -> Result<String, Box<dyn std::error::Error>> {
+    let output = Command::new(command).args(args).output().await?;
 
-pub async fn run_command(command: &str, args: &[&str]) -> Result<String, Box<dyn std::error::Error>> {
-    let output = Command::new(command)
-        .args(args)
-        .output()
-        .await?;
-    
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
@@ -150,8 +151,6 @@ pub async fn cleanup_directory(dir: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-
-
 pub fn set_display() {
     // Set the DISPLAY environment variable for the current process
     env::set_var("DISPLAY", ":0");
@@ -161,6 +160,4 @@ pub fn set_display() {
         Ok(val) => println!("DISPLAY is set to: {}", val),
         Err(e) => println!("Couldn't read DISPLAY: {}", e),
     }
-
-   
 }
