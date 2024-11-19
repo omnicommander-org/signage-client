@@ -156,23 +156,29 @@ async fn wait_for_api(client: &Client, config: &Config) -> Result<bool, Box<dyn 
 }
 
 async fn start_mpv() -> Result<Child, Box<dyn Error>> {
-    let image_display_duration = 10;
+    let image_display_duration = 10; // Duration for displaying images (in seconds)
+    let playlist_path = format!(
+        "{}/.local/share/signage/playlist.txt",
+        std::env::var("HOME")?
+    );
+
     let child = Command::new("mpv")
-        .arg("--loop-playlist=inf")
-        .arg("--volume=-1")
-        .arg("--no-terminal")
-        .arg("video-aspect=32:9")
-        .arg("--fullscreen")
-        .arg("--vf=scale=3960:1020")
-        .arg("--input-ipc-server=/tmp/mpvsocket") // Add IPC server argument
-        .arg(format!(
-            "--image-display-duration={}",
-            image_display_duration
-        ))
-        .arg(format!(
-            "--playlist={}/.local/share/signage/playlist.txt",
-            std::env::var("HOME")?
-        ))
+        .arg("--loop-playlist=inf")          // Infinite looping for the playlist
+        .arg("--no-terminal")               // Suppress terminal output
+        .arg("--fullscreen")                // Fullscreen playback
+        .arg("--hwdec=auto")                // Enable hardware decoding for better performance
+        .arg("--audio-buffer=0.1")          // Reduce audio buffering for low-latency audio
+        .arg("--framedrop=vo")              // Drop frames if playback lags (vo = video output)
+        .arg("--input-ipc-server=/tmp/mpvsocket") // IPC for external control
+        .arg("--hr-seek=yes")               // High-performance seeking
+        .arg("--profile=low-latency")       // Low-latency profile for fast playback response
+        .arg("--cache=yes")                 // Enable caching for smoother playback
+        .arg("--cache-pause=no")            // Prevent playback pauses during cache fill
+        .arg("--demuxer-readahead-secs=30") // Preload 30 seconds of data
+        .arg("--image-display-duration")
+        .arg(format!("{}", image_display_duration)) // Image display duration
+        .arg("--playlist")
+        .arg(playlist_path)                // Playlist file
         .spawn()?;
 
     Ok(child)
