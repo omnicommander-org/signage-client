@@ -147,21 +147,26 @@ async fn start_mpv() -> Result<Child, Box<dyn Error>> {
 async fn get_new_key(client: &Client, config: &mut Config) -> Result<Apikey, Box<dyn Error>> {
     println!("Loading configuration...");
     config.load().await?;
-    println!("{}/get-new-key/{}", config.url, config.id);
+    println!("Requesting new key from: {}/get-new-key/{}", config.url, config.id);
 
-    let res: Apikey = client
+    let res_text = client
         .get(format!("{}/get-new-key/{}", config.url, config.id))
         .basic_auth(&config.username, Some(&config.password))
         .send()
         .await?
-        .json()
+        .text()
         .await?;
 
+    println!("Raw API response: {}", res_text);
+
+    let res: Apikey = serde_json::from_str(&res_text)?;
     println!("Received new API key: {}", res.key);
+
     config.key = Some(res.key.clone());
     config.write().await?;
     Ok(res)
 }
+
 
 async fn sync(client: &Client, config: &Config) -> Result<Option<DateTime<Utc>>, Box<dyn Error>> {
     let res: Updated = client
